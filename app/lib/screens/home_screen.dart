@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
 import '../models.dart';
+import 'admin_screen.dart';
 import 'classes_screen.dart';
 import 'notifications_screen.dart';
 import 'timetable_screen.dart';
@@ -16,12 +17,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _tab = 0;
 
-  static const _dest = [
-    (Icons.class_outlined, Icons.class_, 'Lớp học'),
-    (Icons.calendar_month_outlined, Icons.calendar_month, 'Thời khóa biểu'),
-    (Icons.notifications_outlined, Icons.notifications, 'Thông báo'),
-    (Icons.person_outline, Icons.person, 'Tài khoản'),
-  ];
+  /// Các mục điều hướng; admin có thêm mục Quản trị.
+  List<(IconData, IconData, String, Widget Function())> _destinations(Role role) => [
+        (Icons.class_outlined, Icons.class_, 'Lớp học', () => const ClassesScreen()),
+        (Icons.calendar_month_outlined, Icons.calendar_month, 'Thời khóa biểu', () => const TimetableScreen()),
+        (Icons.notifications_outlined, Icons.notifications, 'Thông báo', () => const NotificationsScreen()),
+        if (role == Role.admin)
+          (Icons.admin_panel_settings_outlined, Icons.admin_panel_settings, 'Quản trị', () => const AdminScreen()),
+        (Icons.person_outline, Icons.person, 'Tài khoản', () => const AccountScreen()),
+      ];
 
   /// Biểu tượng chuông có số thông báo chưa đọc.
   Widget _icon(IconData i) {
@@ -35,12 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 840;
-    final body = switch (_tab) {
-      0 => const ClassesScreen(),
-      1 => const TimetableScreen(),
-      2 => const NotificationsScreen(),
-      _ => const AccountScreen(),
-    };
+    final dest = _destinations(AppScope.of(context).user!.role);
+    if (_tab >= dest.length) _tab = 0;
+    final body = dest[_tab].$4();
     if (wide) {
       return Scaffold(
         body: Row(children: [
@@ -53,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.draw_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
             ),
             destinations: [
-              for (final d in _dest) NavigationRailDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: Text(d.$3)),
+              for (final d in dest) NavigationRailDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: Text(d.$3)),
             ],
           ),
           const VerticalDivider(width: 1),
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
-          for (final d in _dest) NavigationDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: d.$3),
+          for (final d in dest) NavigationDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: d.$3),
         ],
       ),
     );

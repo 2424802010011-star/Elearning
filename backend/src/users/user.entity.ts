@@ -18,6 +18,10 @@ export class User {
   @Column({ type: 'simple-enum', enum: Role })
   role: Role;
 
+  /** false = tài khoản bị admin khóa, không đăng nhập và không gọi API được. */
+  @Column({ default: true })
+  active: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 }

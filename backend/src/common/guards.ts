@@ -3,11 +3,16 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC, ROLES } from './decorators';
 import { Role } from './role.enum';
+import { UsersService } from '../users/users.service';
 
 /** Mọi route đều cần JWT, trừ route gắn @Public(). */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector, private readonly jwt: JwtService) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly jwt: JwtService,
+    private readonly users: UsersService,
+  ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [ctx.getHandler(), ctx.getClass()]);
@@ -15,14 +20,19 @@ export class JwtAuthGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest();
     const [type, token] = (req.headers.authorization ?? '').split(' ');
     if (type !== 'Bearer' || !token) throw new UnauthorizedException('Thiếu token đăng nhập');
+    let sub: string;
     try {
       const payload = await this.jwt.verifyAsync(token);
       if (payload.typ) throw new Error('không phải token đăng nhập');
-      req.user = { id: payload.sub, email: payload.email, role: payload.role };
-      return true;
+      sub = payload.sub;
     } catch {
       throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
     }
+    // Lấy vai trò hiện tại từ CSDL: admin đổi vai trò hoặc khóa tài khoản thì có hiệu lực ngay.
+    const u = await this.users.authInfo(sub);
+    if (!u || !u.active) throw new UnauthorizedException('Tài khoản đã bị khóa hoặc không còn tồn tại');
+    req.user = { id: u.id, email: u.email, role: u.role };
+    return true;
   }
 }
 

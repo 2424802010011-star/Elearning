@@ -42,6 +42,8 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 4. Mở thêm một cửa sổ ẩn danh (Ctrl+Shift+N), đăng nhập Học sinh, vào cùng cuộc họp: giáo viên vẽ đến đâu học sinh thấy ngay đến đó; khi được cấp quyền, học sinh vẽ thì giáo viên cũng thấy.
 5. Tab **Kiểm tra**: giáo viên bấm "Soạn đề", đánh dấu đáp án đúng (một hoặc nhiều), đặt thời gian làm bài rồi "Phát hành". Học sinh (thử hocsinh2@demo.vn, vì hocsinh1 đã làm sẵn) bấm "Bắt đầu làm bài": có đồng hồ đếm ngược, hết giờ tự nộp, nộp xong thấy điểm và đáp án ngay. Giáo viên xem điểm từng em và tỉ lệ làm đúng từng câu.
 
+6. Đăng nhập **Admin** → mục **Quản trị**: xem số liệu, tìm và khóa thử một học sinh (học sinh đó sẽ không đăng nhập được nữa cho tới khi mở khóa), liên kết phụ huynh với học sinh.
+
 ### Thử trên trang /docs
 
 1. Mở `POST /api/auth/login` → **Try it out** → nhập email, mật khẩu → **Execute**. Sao chép `accessToken`.
@@ -79,7 +81,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Nhóm | Chức năng |
 |---|---|
 | Đăng nhập | Đăng ký (học sinh, giáo viên, phụ huynh), đăng nhập, xem tài khoản |
-| Người dùng | Admin quản lý tài khoản, đổi vai trò, liên kết phụ huynh với học sinh |
+| Quản trị | Admin xem số liệu tổng quan; tìm tài khoản (gõ không dấu được), thêm, sửa tên, đổi vai trò, khóa / mở khóa, đặt lại mật khẩu; liên kết hoặc gỡ liên kết phụ huynh với học sinh. Khóa tài khoản hoặc đổi vai trò có hiệu lực ngay, không cần chờ hết hạn đăng nhập |
 | Lớp học | Tạo lớp có mã mời, học sinh xin vào lớp, giáo viên duyệt hoặc từ chối, đổi mã mời |
 | Thời khóa biểu | Tiết lặp hằng tuần, chặn giáo viên trùng giờ, xem lịch theo tuần cho mọi vai trò |
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
@@ -93,6 +95,7 @@ Quy tắc phân quyền chính:
 - Admin thấy mọi lớp. Giáo viên thấy lớp mình dạy. Học sinh thấy lớp đã được duyệt. Phụ huynh thấy lớp của con.
 - Học sinh chỉ vào phòng họp khi giáo viên đã mở phòng. Phụ huynh không vào phòng học.
 - Học sinh mặc định không viết được lên bảng. Khi kết thúc họp, mọi quyền viết bị thu lại.
+- Không đổi được vai trò của giáo viên còn phụ trách lớp. Đổi vai trò phụ huynh hoặc học sinh thì liên kết phụ huynh của tài khoản đó bị gỡ. Admin không tự khóa hay tự bỏ quyền admin của mình.
 
 ## Ghi chú kỹ thuật
 

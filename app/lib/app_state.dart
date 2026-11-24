@@ -18,11 +18,15 @@ class AppState extends ChangeNotifier {
   Timer? _poll;
 
   /// Hỏi máy chủ số thông báo chưa đọc (30 giây một lần khi đang đăng nhập).
+  /// Gặp lỗi 401 thì đăng xuất.
   Future<void> refreshUnread() async {
     if (api.token == null) return;
     try {
       final r = await api.get('/notifications/unread-count');
       unread.value = (r['unreadCount'] as num).toInt();
+    } on ApiException catch (e) {
+      // Token hết hạn hoặc tài khoản bị admin khóa: đưa về màn hình đăng nhập.
+      if (e.status == 401) await logout();
     } catch (_) {}
   }
 

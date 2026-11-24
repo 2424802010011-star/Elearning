@@ -16,9 +16,10 @@ class User {
   final String email;
   final String fullName;
   final Role role;
-  User({required this.id, required this.email, required this.fullName, required this.role});
-  factory User.fromJson(Map<String, dynamic> j) =>
-      User(id: j['id'], email: j['email'], fullName: j['fullName'], role: roleFrom(j['role']));
+  final bool active;
+  User({required this.id, required this.email, required this.fullName, required this.role, this.active = true});
+  factory User.fromJson(Map<String, dynamic> j) => User(
+      id: j['id'], email: j['email'], fullName: j['fullName'], role: roleFrom(j['role']), active: j['active'] ?? true);
 }
 
 class Classroom {

@@ -23,6 +23,7 @@ import { seedDemo } from './seed';
 import { TimetableModule } from './timetable/timetable.module';
 import { TimetableService } from './timetable/timetable.service';
 import { UsersModule } from './users/users.module';
+import { AdminModule } from './admin/admin.module';
 import { UsersService } from './users/users.service';
 
 /**
@@ -67,6 +68,7 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
       },
     }),
     UsersModule,
+    AdminModule,
     AuthModule,
     ClassesModule,
     TimetableModule,

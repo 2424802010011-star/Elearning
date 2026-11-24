@@ -19,6 +19,7 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Sai email hoặc mật khẩu');
     }
+    if (!user.active) throw new UnauthorizedException('Tài khoản đã bị khóa, vui lòng liên hệ nhà trường');
     return this.issue(await this.users.findById(user.id));
   }
 
