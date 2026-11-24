@@ -103,7 +103,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
 | Bài tập | Giáo viên giao bài (hạn nộp, điểm tối đa), học sinh nộp/nộp lại khi chưa chấm, tự đánh dấu nộp muộn, giáo viên chấm điểm + nhận xét, phụ huynh xem điểm của con |
 | Bài giảng, file | Giáo viên đăng bài giảng kèm tài liệu, slide, video (tối đa 50 MB mỗi file); học sinh nộp bài bằng ảnh chụp hoặc file. File bài giảng: cả lớp tải được. File bài nộp: chỉ học sinh đó, giáo viên và phụ huynh. Link tải có hạn 10 phút |
-| Thông báo | Tự báo khi có bài tập, bài kiểm tra, bài giảng mới, khi có điểm, khi lớp bắt đầu học trực tuyến, khi học sinh xin vào lớp hoặc được duyệt. Phụ huynh nhận cả điểm của con. App hiện số chưa đọc trên chuông, bấm vào mở đúng lớp và đúng tab |
+| Thông báo | Nhắc giờ học 15 phút trước mỗi tiết trong thời khóa biểu (đổi bằng `REMIND_MINUTES`). Tự báo khi có bài tập, bài kiểm tra, bài giảng mới, khi có điểm, khi lớp bắt đầu học trực tuyến, khi học sinh xin vào lớp hoặc được duyệt. Phụ huynh nhận cả điểm của con. App hiện số chưa đọc trên chuông, bấm vào mở đúng lớp và đúng tab |
 | Kiểm tra trắc nghiệm | Soạn đề (câu một hoặc nhiều đáp án, điểm từng câu), bản nháp/phát hành, giới hạn thời gian và hạn chót, đề gửi học sinh không kèm đáp án, tự chấm khi nộp, thống kê điểm và tỉ lệ đúng từng câu, phụ huynh xem điểm của con |
 | Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 

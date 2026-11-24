@@ -32,6 +32,7 @@ IconData _iconFor(String type) => switch (type) {
       'quiz_new' => Icons.quiz_outlined,
       'lesson_new' => Icons.menu_book_outlined,
       'meeting_live' => Icons.videocam_outlined,
+      'class_soon' => Icons.alarm,
       'enroll_request' => Icons.person_add_alt,
       'enroll_approved' => Icons.how_to_reg_outlined,
       'enroll_rejected' => Icons.person_off_outlined,

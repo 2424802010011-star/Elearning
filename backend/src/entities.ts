@@ -6,6 +6,7 @@ import { Lesson } from './lessons/lesson.entity';
 import { Meeting } from './meetings/meeting.entity';
 import { Notification } from './notifications/notification.entity';
 import { Quiz, QuizAttempt } from './quizzes/entities';
+import { ReminderLog } from './timetable/reminder-log.entity';
 import { TimetableEntry } from './timetable/timetable-entry.entity';
 import { ParentLink } from './users/parent-link.entity';
 import { User } from './users/user.entity';
@@ -25,4 +26,5 @@ export const ENTITIES = [
   Lesson,
   StoredFile,
   Notification,
+  ReminderLog,
 ];
