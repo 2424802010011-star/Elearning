@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:material_ui/material_ui.dart';
 
 import '../app_state.dart';
 import '../ink/beautify.dart';
+import '../ink/board_sync.dart';
 import '../ink/whiteboard.dart';
 import '../models.dart';
 import '../ui.dart';
@@ -22,36 +21,53 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   final board = WhiteboardController();
   late bool canWrite = widget.joinInfo['canWriteBoard'] == true;
   late final bool isHost = widget.joinInfo['isHost'] == true;
-  Timer? _poll;
+  BoardSync? _sync;
+  bool _connected = false;
 
   static const _colors = [Colors.black, Color(0xFF1565C0), Color(0xFFC62828), Color(0xFF2E7D32), Color(0xFFEF6C00)];
 
   @override
-  void initState() {
-    super.initState();
-    if (!isHost) {
-      _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refreshPermission());
-    }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_sync != null) return;
+    final api = AppScope.of(context).api;
+    _sync = BoardSync(
+      apiBaseUrl: api.baseUrl,
+      meetingId: widget.meeting.id,
+      token: api.token!,
+      board: board,
+      onCanWrite: (now) {
+        if (!mounted || now == canWrite) return;
+        setState(() => canWrite = now);
+        if (!isHost) showMsg(context, now ? 'Giáo viên đã cho phép bạn viết lên bảng' : 'Giáo viên đã thu quyền viết bảng');
+      },
+      onConnection: (c) {
+        if (mounted && c != _connected) setState(() => _connected = c);
+      },
+      onError: (msg) {
+        if (mounted) showMsg(context, msg, error: true);
+      },
+      onEnded: () async {
+        if (!mounted) return;
+        if (!isHost) {
+          await showDialog(
+            context: context,
+            builder: (c) => AlertDialog(
+              title: const Text('Buổi học đã kết thúc'),
+              actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Rời phòng'))],
+            ),
+          );
+          if (mounted) Navigator.pop(context);
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
-    _poll?.cancel();
+    _sync?.dispose();
     board.dispose();
     super.dispose();
-  }
-
-  Future<void> _refreshPermission() async {
-    try {
-      final p = await AppScope.of(context).api.get('/meetings/${widget.meeting.id}/whiteboard/permissions');
-      final now = p['canWrite'] == true;
-      if (now != canWrite && mounted) {
-        setState(() => canWrite = now);
-        showMsg(context, now ? 'Giáo viên đã cho phép bạn viết lên bảng' : 'Giáo viên đã thu quyền viết bảng');
-      }
-    } catch (_) {
-      // Mất kết nối tạm thời: thử lại ở lần sau.
-    }
   }
 
   void _onBeautified(Stroke s) {
@@ -115,11 +131,12 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
           color: scheme.surfaceContainerHigh,
           child: ListTile(
             dense: true,
-            leading: const Icon(Icons.videocam_outlined),
+            leading: Icon(_connected ? Icons.wifi : Icons.wifi_off, color: _connected ? Colors.green : Colors.orange),
             title: Text('${widget.classroom.name} · phòng ${widget.joinInfo['roomName'].toString().substring(9, 17)}'),
-            subtitle: Text(isHost
-                ? 'Bạn là người dạy. Video/âm thanh kết nối tới ${widget.joinInfo['livekitUrl']}'
-                : (canWrite ? 'Bạn đang được phép viết lên bảng' : 'Bạn đang xem bảng. Chờ giáo viên cho phép viết.')),
+            subtitle: Text([
+              _connected ? 'Bảng đang đồng bộ trực tiếp' : 'Đang kết nối bảng...',
+              isHost ? 'Bạn là người dạy' : (canWrite ? 'Bạn được phép viết' : 'Chờ giáo viên cho phép viết'),
+            ].join(' · ')),
           ),
         ),
         if (canWrite) _Toolbar(board: board, colors: _colors, isHost: isHost),

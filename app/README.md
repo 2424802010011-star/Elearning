@@ -8,7 +8,8 @@ Một mã nguồn chạy trên Android, iOS, Windows, macOS và trình duyệt w
 - Lịch học của lớp, thêm/xóa tiết; thời khóa biểu cả tuần cho mọi vai trò
 - Phòng học: bảng trắng vẽ tay (bút, tẩy, màu, độ dày, hoàn tác, xóa bảng)
 - **AI làm đẹp nét**: tự nắn đường thẳng, hình tròn, elip, tam giác, hình chữ nhật, tứ giác, đa giác và đồ thị hình sin; có nút "Giữ nét gốc"
-- Giáo viên cấp/thu quyền viết bảng cho từng học sinh hoặc cả lớp; học sinh tự cập nhật sau vài giây
+- Bảng trắng đồng bộ thời gian thực (WebSocket): nét vẽ hiện ngay trên máy mọi người, tự kết nối lại khi rớt mạng, toạ độ chuẩn hoá nên màn hình to nhỏ đều đúng vị trí
+- Giáo viên cấp/thu quyền viết bảng cho từng học sinh hoặc cả lớp; học sinh được báo ngay
 
 ## Chạy
 Cần cài Flutter (https://docs.flutter.dev/get-started/install) và bật máy chủ backend trước.

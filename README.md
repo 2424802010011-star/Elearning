@@ -11,7 +11,7 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Backend cấp phòng và token xong; giao diện video chưa làm |
 | App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng (thư mục `app`) |
-| Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin; chưa đồng bộ nhiều người |
+| Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đồng bộ thời gian thực giữa giáo viên và học sinh |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
 
@@ -38,7 +38,7 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 1. Đăng nhập Giáo viên → Toán 10A1 → tab Cuộc họp → Mở phòng.
 2. Bật "AI làm đẹp nét", vẽ tay một vòng tròn, tam giác, đường lượn sóng: app tự nắn lại cho gọn.
 3. Bấm biểu tượng quyền viết (góc trên) để cho học sinh viết lên bảng.
-4. Mở thêm một cửa sổ ẩn danh, đăng nhập Học sinh, vào cùng cuộc họp để thấy quyền viết thay đổi.
+4. Mở thêm một cửa sổ ẩn danh (Ctrl+Shift+N), đăng nhập Học sinh, vào cùng cuộc họp: giáo viên vẽ đến đâu học sinh thấy ngay đến đó; khi được cấp quyền, học sinh vẽ thì giáo viên cũng thấy.
 
 ### Thử trên trang /docs
 
@@ -80,7 +80,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Lớp học | Tạo lớp có mã mời, học sinh xin vào lớp, giáo viên duyệt hoặc từ chối, đổi mã mời |
 | Thời khóa biểu | Tiết lặp hằng tuần, chặn giáo viên trùng giờ, xem lịch theo tuần cho mọi vai trò |
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
-| Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp, học sinh xem mình có được viết không |
+| Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 
 Quy tắc phân quyền chính:
 - Admin thấy mọi lớp. Giáo viên thấy lớp mình dạy. Học sinh thấy lớp đã được duyệt. Phụ huynh thấy lớp của con.

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { AccessToken } from 'livekit-server-sdk';
 import { Repository } from 'typeorm';
+import { BoardHub } from '../board/board.hub';
 import { ClassesService } from '../classes/classes.service';
 import { AuthUser } from '../common/decorators';
 import { Role } from '../common/role.enum';
@@ -18,7 +19,17 @@ export class MeetingsService {
     private readonly classes: ClassesService,
     private readonly users: UsersService,
     private readonly cfg: ConfigService,
-  ) {}
+    private readonly hub: BoardHub,
+  ) {
+    // Chỉ người được vào phòng (đang mở) mới kết nối được bảng trắng.
+    hub.setAccessChecker(async (user, meetingId) => {
+      if (user.role === Role.Parent) throw new ForbiddenException();
+      const m = await this.get(user, meetingId);
+      if (m.status !== MeetingStatus.Live) throw new BadRequestException('Phòng chưa mở');
+      const isHost = user.role === Role.Admin || m.classroom.teacher.id === user.id;
+      return { isHost, allowAll: m.boardAllowAll, writers: m.boardWriters };
+    });
+  }
 
   async create(me: AuthUser, classId: string, dto: CreateMeetingDto): Promise<Meeting> {
     const classroom = await this.classes.assertCanManage(me, classId);
@@ -75,7 +86,9 @@ export class MeetingsService {
     m.endedAt = new Date();
     m.boardAllowAll = false;
     m.boardWriters = [];
-    return this.meetings.save(m);
+    const saved = await this.meetings.save(m);
+    this.hub.meetingEnded(m.id);
+    return saved;
   }
 
   /**
@@ -139,6 +152,7 @@ export class MeetingsService {
     }
     if (dto.allowAll !== undefined) m.boardAllowAll = dto.allowAll;
     await this.meetings.save(m);
+    this.hub.permissionsChanged(m.id, m.boardAllowAll, m.boardWriters);
     return { allowAll: m.boardAllowAll, writers: m.boardWriters, canWrite: true };
   }
 }
