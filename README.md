@@ -9,7 +9,7 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 |---|---|---|
 | Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài tập và chấm điểm |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
-| Họp video | LiveKit (WebRTC) | Backend cấp phòng và token xong; giao diện video chưa làm |
+| Họp video | LiveKit (WebRTC) | Đã có: camera, micro, chia sẻ màn hình, khung hình người tham gia |
 | App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập (thư mục `app`) |
 | Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đồng bộ thời gian thực giữa giáo viên và học sinh |
 
@@ -59,8 +59,9 @@ npm run dev         # chế độ phát triển
 Môi trường thật dùng PostgreSQL: chép `.env.example` thành `.env`, bỏ dấu `#` ở các dòng `DATABASE_URL`, `JWT_SECRET`, `ADMIN_*`.
 Có Docker thì `docker compose up -d db` để bật PostgreSQL.
 
-Họp video thật cần máy chủ LiveKit: tải `livekit-server` tại https://github.com/livekit/livekit/releases rồi chạy `livekit-server --dev`.
-Giao diện họp sẽ có khi làm app Flutter.
+Họp video cần máy chủ LiveKit. Bản Windows đã có sẵn ở `tools\livekit-server.exe` và `chay-thu.bat` tự bật nó
+(nếu Windows hỏi tường lửa thì chọn Allow). Máy khác: tải tại https://github.com/livekit/livekit/releases rồi chạy `livekit-server --dev`.
+Học sinh dùng máy khác trong mạng LAN: đặt `LIVEKIT_URL=ws://<IP máy chủ>:7880` và chạy `livekit-server --dev --bind 0.0.0.0`.
 
 ### Test tự động
 

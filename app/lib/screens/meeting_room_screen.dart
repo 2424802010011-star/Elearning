@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../ink/beautify.dart';
 import '../ink/board_sync.dart';
 import '../ink/whiteboard.dart';
+import '../meeting/video_call.dart';
 import '../models.dart';
 import '../ui.dart';
 
@@ -22,6 +23,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   late bool canWrite = widget.joinInfo['canWriteBoard'] == true;
   late final bool isHost = widget.joinInfo['isHost'] == true;
   BoardSync? _sync;
+  final call = VideoCall();
   bool _connected = false;
 
   static const _colors = [Colors.black, Color(0xFF1565C0), Color(0xFFC62828), Color(0xFF2E7D32), Color(0xFFEF6C00)];
@@ -31,6 +33,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
     super.didChangeDependencies();
     if (_sync != null) return;
     final api = AppScope.of(context).api;
+    call.connect(widget.joinInfo['livekitUrl'], widget.joinInfo['token']);
     _sync = BoardSync(
       apiBaseUrl: api.baseUrl,
       meetingId: widget.meeting.id,
@@ -66,6 +69,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   @override
   void dispose() {
     _sync?.dispose();
+    call.dispose();
     board.dispose();
     super.dispose();
   }
@@ -109,10 +113,12 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final wide = MediaQuery.sizeOf(context).width >= 900;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.meeting.title, overflow: TextOverflow.ellipsis),
         actions: [
+          _MediaButtons(call: call),
           if (isHost) IconButton(tooltip: 'Quyền viết bảng', icon: const Icon(Icons.edit_note), onPressed: _permissions),
           if (isHost)
             Padding(
@@ -142,7 +148,17 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
         if (canWrite) _Toolbar(board: board, colors: _colors, isHost: isHost),
         const Divider(height: 1),
         Expanded(
-          child: WhiteboardCanvas(controller: board, enabled: canWrite, onBeautified: _onBeautified),
+          child: wide
+              ? Row(children: [
+                  Expanded(child: WhiteboardCanvas(controller: board, enabled: canWrite, onBeautified: _onBeautified)),
+                  const VerticalDivider(width: 1),
+                  SizedBox(width: 240, child: VideoPanel(call: call, axis: Axis.vertical)),
+                ])
+              : Column(children: [
+                  SizedBox(height: 120, child: VideoPanel(call: call, axis: Axis.horizontal)),
+                  const Divider(height: 1),
+                  Expanded(child: WhiteboardCanvas(controller: board, enabled: canWrite, onBeautified: _onBeautified)),
+                ]),
         ),
       ]),
     );
@@ -290,6 +306,45 @@ class _PermissionSheetState extends State<_PermissionSheet> {
           if (_students.isEmpty) const ListTile(title: Text('Lớp chưa có học sinh')),
         ]),
       ),
+    );
+  }
+}
+
+class _MediaButtons extends StatelessWidget {
+  final VideoCall call;
+  const _MediaButtons({required this.call});
+
+  Future<void> _run(BuildContext context, Future<String?> Function() f) async {
+    final err = await f();
+    if (err != null && context.mounted) showMsg(context, err, error: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: call,
+      builder: (context, _) {
+        if (!call.connected) return const SizedBox.shrink();
+        return Row(mainAxisSize: MainAxisSize.min, children: [
+          IconButton(
+            tooltip: call.micOn ? 'Tắt micro' : 'Bật micro',
+            icon: Icon(call.micOn ? Icons.mic : Icons.mic_off, color: call.micOn ? null : Colors.red),
+            onPressed: () => _run(context, call.toggleMic),
+          ),
+          IconButton(
+            tooltip: call.camOn ? 'Tắt camera' : 'Bật camera',
+            icon: Icon(call.camOn ? Icons.videocam : Icons.videocam_off, color: call.camOn ? null : Colors.red),
+            onPressed: () => _run(context, call.toggleCam),
+          ),
+          IconButton(
+            tooltip: call.sharing ? 'Dừng chia sẻ màn hình' : 'Chia sẻ màn hình',
+            isSelected: call.sharing,
+            icon: const Icon(Icons.screen_share_outlined),
+            selectedIcon: const Icon(Icons.stop_screen_share),
+            onPressed: () => _run(context, call.toggleShare),
+          ),
+        ]);
+      },
     );
   }
 }

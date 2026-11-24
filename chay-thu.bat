@@ -15,6 +15,16 @@ if errorlevel 1 goto fail
 
 :run
 echo.
+if not exist "%~dp0tools\livekit-server.exe" goto novideo
+tasklist /FI "IMAGENAME eq livekit-server.exe" | find /I "livekit-server.exe" >nul
+if not errorlevel 1 goto videook
+echo Dang bat may chu video LiveKit. Neu Windows hoi tuong lua, chon Allow.
+start "EduBoard - may chu video" /min "%~dp0tools\livekit-server.exe" --dev
+goto videook
+:novideo
+echo Khong thay tools\livekit-server.exe nen phong hoc se khong co video, bang trang van dung duoc.
+:videook
+echo.
 echo Dang khoi dong may chu. Trinh duyet se tu mo khi san sang.
 echo Muon tat may chu thi dong cua so nay.
 echo.
