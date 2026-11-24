@@ -17,6 +17,7 @@ export class JwtAuthGuard implements CanActivate {
     if (type !== 'Bearer' || !token) throw new UnauthorizedException('Thiếu token đăng nhập');
     try {
       const payload = await this.jwt.verifyAsync(token);
+      if (payload.typ) throw new Error('không phải token đăng nhập');
       req.user = { id: payload.sub, email: payload.email, role: payload.role };
       return true;
     } catch {

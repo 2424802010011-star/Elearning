@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsDateString, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateAssignmentDto {
   @ApiProperty({ example: 'Bài tập về hàm số sin' })
@@ -28,11 +28,18 @@ export class CreateAssignmentDto {
 }
 
 export class SubmitDto {
-  @ApiProperty({ example: 'Chu kỳ của y = 2sin(x) là 2π, biên độ là 2.' })
+  @ApiPropertyOptional({ example: 'Chu kỳ của y = 2sin(x) là 2π, biên độ là 2.' })
+  @IsOptional()
   @IsString()
-  @MinLength(1, { message: 'Bài làm không được để trống' })
   @MaxLength(50000)
-  content: string;
+  content?: string;
+
+  @ApiPropertyOptional({ description: 'Id các file đã tải lên qua POST /files (ảnh chụp bài làm, PDF...)', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsUUID('all', { each: true })
+  fileIds?: string[];
 }
 
 export class GradeDto {

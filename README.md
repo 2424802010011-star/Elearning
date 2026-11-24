@@ -7,10 +7,10 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 
 | Phần | Công nghệ | Trạng thái |
 |---|---|---|
-| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài tập và chấm điểm, kiểm tra trắc nghiệm tự chấm |
+| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài giảng và file, bài tập và chấm điểm, kiểm tra trắc nghiệm tự chấm |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Đã có: camera, micro, chia sẻ màn hình, khung hình người tham gia |
-| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập, kiểm tra trắc nghiệm (thư mục `app`) |
+| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài giảng có file, bài tập (nộp kèm file), kiểm tra trắc nghiệm (thư mục `app`) |
 | Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học và bộ nhận diện ký hiệu $P chạy ngay trên máy (không cần mạng) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đọc chữ số, chữ và ký hiệu toán (phân số, căn, số mũ, ∫, π, Σ, ∞…) rồi viết lại cho gọn, đồng bộ thời gian thực |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
@@ -84,6 +84,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Thời khóa biểu | Tiết lặp hằng tuần, chặn giáo viên trùng giờ, xem lịch theo tuần cho mọi vai trò |
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
 | Bài tập | Giáo viên giao bài (hạn nộp, điểm tối đa), học sinh nộp/nộp lại khi chưa chấm, tự đánh dấu nộp muộn, giáo viên chấm điểm + nhận xét, phụ huynh xem điểm của con |
+| Bài giảng, file | Giáo viên đăng bài giảng kèm tài liệu, slide, video (tối đa 50 MB mỗi file); học sinh nộp bài bằng ảnh chụp hoặc file. File bài giảng: cả lớp tải được. File bài nộp: chỉ học sinh đó, giáo viên và phụ huynh. Link tải có hạn 10 phút |
 | Kiểm tra trắc nghiệm | Soạn đề (câu một hoặc nhiều đáp án, điểm từng câu), bản nháp/phát hành, giới hạn thời gian và hạn chót, đề gửi học sinh không kèm đáp án, tự chấm khi nộp, thống kê điểm và tỉ lệ đúng từng câu, phụ huynh xem điểm của con |
 | Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 
@@ -95,4 +96,5 @@ Quy tắc phân quyền chính:
 ## Ghi chú kỹ thuật
 
 - Mật khẩu băm bằng bcrypt, đăng nhập bằng JWT.
+- File tải lên lưu trong thư mục `backend/uploads` (đổi bằng `UPLOAD_DIR`, giới hạn bằng `MAX_UPLOAD_MB`). File HTML/SVG luôn bị bắt tải về, không mở trực tiếp, để tránh chạy mã lạ.
 - `DB_SYNC=true` tự tạo bảng, chỉ dùng cho dev/test. Trước khi lên production cần chuyển sang migration.

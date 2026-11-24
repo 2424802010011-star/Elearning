@@ -4,6 +4,8 @@ import { ClassesService } from './classes/classes.service';
 import { EnrollmentStatus } from './classes/enrollment.entity';
 import { AuthUser } from './common/decorators';
 import { Role } from './common/role.enum';
+import { FilesService } from './files/files.service';
+import { LessonsService } from './lessons/lessons.service';
 import { MeetingsService } from './meetings/meetings.service';
 import { QuizzesService } from './quizzes/quizzes.service';
 import { TimetableService } from './timetable/timetable.service';
@@ -21,10 +23,13 @@ export async function seedDemo(
   meetings: MeetingsService,
   assignments: AssignmentsService,
   quizzes: QuizzesService,
+  files: FilesService,
+  lessons: LessonsService,
 ) {
   if ((await users.list(Role.Teacher)).length > 0) {
     // Dữ liệu mẫu đã có từ bản trước: chỉ bổ sung phần mới.
     await seedQuizzes(users, classes, quizzes);
+    await seedLessons(users, classes, files, lessons);
     return;
   }
   const log = new Logger('Demo');
@@ -65,6 +70,7 @@ export async function seedDemo(
   await assignments.submit(as(hs2), bt1.id, { content: 'Chu kỳ là π.' });
 
   await seedQuizzes(users, classes, quizzes);
+  await seedLessons(users, classes, files, lessons);
 
   log.log(`Đã tạo dữ liệu mẫu. Mật khẩu mọi tài khoản demo: ${DEMO_PASSWORD}. Mã mời lớp Toán 10A1: ${lop.inviteCode}`);
 }
@@ -104,4 +110,36 @@ async function seedQuizzes(users: UsersService, classes: ClassesService, quizzes
     const ids = kt.questions.map((q) => q.id);
     await quizzes.submit(as(hs1), kt.id, { answers: { [ids[0]]: [0], [ids[1]]: [1], [ids[2]]: [0], [ids[3]]: [1] } });
   }
+}
+
+/** Bài giảng mẫu có file đính kèm (chỉ tạo khi lớp chưa có bài giảng nào). */
+async function seedLessons(users: UsersService, classes: ClassesService, files: FilesService, lessons: LessonsService) {
+  const gv = (await users.list(Role.Teacher)).find((u) => u.email === 'giaovien@demo.vn');
+  if (!gv) return;
+  const lop = (await classes.listFor(as(gv))).find((c) => c.name === 'Toán 10A1');
+  if (!lop || (await lessons.list(as(gv), lop.id)).length) return;
+  const text = [
+    'TÓM TẮT CÔNG THỨC LƯỢNG GIÁC',
+    '',
+    'sin²x + cos²x = 1',
+    'tan x = sin x / cos x',
+    '1 + tan²x = 1 / cos²x',
+    'sin 2x = 2 sin x cos x',
+    'cos 2x = cos²x − sin²x = 1 − 2sin²x',
+    '',
+    'Chu kỳ: y = sin(ax) và y = cos(ax) có chu kỳ 2π/|a|.',
+  ].join('\n');
+  const buffer = Buffer.from(text, 'utf8');
+  const name = 'Tóm tắt công thức lượng giác.txt';
+  const f = await files.upload(as(gv), {
+    originalname: Buffer.from(name, 'utf8').toString('latin1'),
+    mimetype: 'text/plain; charset=utf-8',
+    size: buffer.length,
+    buffer,
+  } as Express.Multer.File);
+  await lessons.create(as(gv), lop.id, {
+    title: 'Bài 1: Hàm số lượng giác',
+    content: 'Các em đọc bản tóm tắt công thức trước buổi học thứ Hai. Chú ý cách tìm chu kỳ của hàm số.',
+    fileIds: [f.id],
+  });
 }

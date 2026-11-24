@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Classroom } from '../classes/classroom.entity';
+import type { FileRef } from '../files/stored-file.entity';
 import { User } from '../users/user.entity';
 
 @Entity('assignments')
@@ -41,6 +42,10 @@ export class Submission {
 
   @Column({ type: 'text' })
   content: string;
+
+  /** File đính kèm bài nộp (ảnh chụp bài làm, PDF...). */
+  @Column({ type: 'simple-json', nullable: true })
+  attachments?: FileRef[] | null;
 
   @Column()
   submittedAt: Date;

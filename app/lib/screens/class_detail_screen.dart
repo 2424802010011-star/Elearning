@@ -5,6 +5,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../ui.dart';
 import 'assignments_tab.dart';
+import 'lessons_tab.dart';
 import 'meeting_room_screen.dart';
 import 'quizzes_tab.dart';
 
@@ -33,13 +34,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     final app = AppScope.of(context);
     final manage = _canManage(app);
     return DefaultTabController(
-      length: manage ? 5 : 4,
+      length: manage ? 6 : 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(_c.name),
           bottom: TabBar(isScrollable: MediaQuery.sizeOf(context).width < 600, tabAlignment: MediaQuery.sizeOf(context).width < 600 ? TabAlignment.start : null, tabs: [
             const Tab(text: 'Lịch học'),
             const Tab(text: 'Cuộc họp'),
+            const Tab(text: 'Bài giảng'),
             const Tab(text: 'Bài tập'),
             const Tab(text: 'Kiểm tra'),
             if (manage) const Tab(text: 'Học sinh'),
@@ -70,6 +72,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             child: TabBarView(children: [
               _TimetableTab(classroom: _c, manage: manage),
               _MeetingsTab(classroom: _c, manage: manage),
+              LessonsTab(classroom: _c, manage: manage),
               AssignmentsTab(classroom: _c, manage: manage),
               QuizzesTab(classroom: _c, manage: manage),
               if (manage) _StudentsTab(classroom: _c),

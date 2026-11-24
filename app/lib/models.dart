@@ -124,10 +124,44 @@ class Meeting {
 
 const dayNames = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
 
+class FileRef {
+  final String id;
+  final String name;
+  final int size;
+  final String mimeType;
+  const FileRef({required this.id, required this.name, required this.size, required this.mimeType});
+  factory FileRef.fromJson(Map<String, dynamic> j) =>
+      FileRef(id: j['id'], name: j['name'] ?? 'file', size: (j['size'] as num?)?.toInt() ?? 0, mimeType: j['mimeType'] ?? '');
+  static List<FileRef> listFrom(dynamic l) => [for (final j in (l as List? ?? const [])) FileRef.fromJson(j)];
+}
+
+String fmtSize(int b) => b < 1024
+    ? '$b B'
+    : b < 1024 * 1024
+        ? '${(b / 1024).toStringAsFixed(0)} KB'
+        : '${(b / 1024 / 1024).toStringAsFixed(1).replaceAll('.', ',')} MB';
+
+class Lesson {
+  final String id;
+  final String title;
+  final String content;
+  final List<FileRef> attachments;
+  final DateTime createdAt;
+  Lesson({required this.id, required this.title, required this.content, required this.attachments, required this.createdAt});
+  factory Lesson.fromJson(Map<String, dynamic> j) => Lesson(
+        id: j['id'],
+        title: j['title'],
+        content: j['content'] ?? '',
+        attachments: FileRef.listFrom(j['attachments']),
+        createdAt: DateTime.parse(j['createdAt']).toLocal(),
+      );
+}
+
 class Submission {
   final String id;
   final User student;
   final String content;
+  final List<FileRef> attachments;
   final DateTime submittedAt;
   final bool late;
   final double? score;
@@ -136,6 +170,7 @@ class Submission {
     required this.id,
     required this.student,
     required this.content,
+    this.attachments = const [],
     required this.submittedAt,
     required this.late,
     this.score,
@@ -145,6 +180,7 @@ class Submission {
         id: j['id'],
         student: User.fromJson(j['student']),
         content: j['content'] ?? '',
+        attachments: FileRef.listFrom(j['attachments']),
         submittedAt: DateTime.parse(j['submittedAt']).toLocal(),
         late: j['late'] == true,
         score: (j['score'] as num?)?.toDouble(),

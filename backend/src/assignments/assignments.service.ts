@@ -4,6 +4,8 @@ import { In, Repository } from 'typeorm';
 import { ClassesService } from '../classes/classes.service';
 import { AuthUser } from '../common/decorators';
 import { Role } from '../common/role.enum';
+import { FilesService } from '../files/files.service';
+import { FileVisibility } from '../files/stored-file.entity';
 import { UsersService } from '../users/users.service';
 import { CreateAssignmentDto, GradeDto, SubmitDto } from './dto';
 import { Assignment, Submission } from './entities';
@@ -15,6 +17,7 @@ export class AssignmentsService {
     @InjectRepository(Submission) private readonly submissions: Repository<Submission>,
     private readonly classes: ClassesService,
     private readonly users: UsersService,
+    private readonly files: FilesService,
   ) {}
 
   async create(me: AuthUser, classId: string, dto: CreateAssignmentDto) {
@@ -75,8 +78,12 @@ export class AssignmentsService {
     const now = new Date();
     let sub = await this.submissions.findOne({ where: { assignment: { id }, student: { id: me.id } } });
     if (sub?.score != null) throw new BadRequestException('Bài đã được chấm, không nộp lại được');
+    const content = dto.content?.trim() ?? '';
+    if (!content && !dto.fileIds?.length) throw new BadRequestException('Bài làm không được để trống: hãy viết bài hoặc đính kèm file');
+    const attachments = await this.files.claim(me, dto.fileIds, a.classroom, FileVisibility.Private);
     if (!sub) sub = this.submissions.create({ assignment: a, student: await this.users.findById(me.id) });
-    sub.content = dto.content;
+    sub.content = content;
+    sub.attachments = attachments;
     sub.submittedAt = now;
     sub.late = !!a.dueAt && now > a.dueAt;
     const saved = await this.submissions.save(sub);

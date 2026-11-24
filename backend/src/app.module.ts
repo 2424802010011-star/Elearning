@@ -9,6 +9,10 @@ import { AuthModule } from './auth/auth.module';
 import { ClassesModule } from './classes/classes.module';
 import { ClassesService } from './classes/classes.service';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
+import { FilesModule } from './files/files.module';
+import { FilesService } from './files/files.service';
+import { LessonsModule } from './lessons/lessons.module';
+import { LessonsService } from './lessons/lessons.service';
 import { Role } from './common/role.enum';
 import { MeetingsModule } from './meetings/meetings.module';
 import { MeetingsService } from './meetings/meetings.service';
@@ -68,6 +72,8 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
     MeetingsModule,
     AssignmentsModule,
     QuizzesModule,
+    FilesModule,
+    LessonsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -84,6 +90,8 @@ export class AppModule implements OnApplicationBootstrap {
     private readonly meetings: MeetingsService,
     private readonly assignments: AssignmentsService,
     private readonly quizzes: QuizzesService,
+    private readonly files: FilesService,
+    private readonly lessons: LessonsService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -96,7 +104,7 @@ export class AppModule implements OnApplicationBootstrap {
       this.log.log(`Đã tạo tài khoản admin ${email}`);
     }
     if (this.cfg.get('SEED_DEMO', demo ? 'true' : 'false') === 'true') {
-      await seedDemo(this.users, this.classes, this.timetable, this.meetings, this.assignments, this.quizzes);
+      await seedDemo(this.users, this.classes, this.timetable, this.meetings, this.assignments, this.quizzes, this.files, this.lessons);
     }
   }
 }

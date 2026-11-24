@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../ui.dart';
+import '../widgets/files.dart';
 
 /// Tab "Bài tập" trong chi tiết lớp.
 class AssignmentsTab extends StatefulWidget {
@@ -169,13 +170,17 @@ class AssignmentDetailScreen extends StatefulWidget {
 class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
   late Submission? _sub = widget.assignment.submissions.firstOrNull;
   late final _answer = TextEditingController(text: _sub?.content ?? '');
+  late List<FileRef> _files = _sub?.attachments ?? [];
   bool _busy = false;
 
   Future<void> _submit() async {
     final api = AppScope.of(context).api;
     setState(() => _busy = true);
     await runGuarded(context, () async {
-      final j = await api.post('/assignments/${widget.assignment.id}/submit', {'content': _answer.text});
+      final j = await api.post('/assignments/${widget.assignment.id}/submit', {
+        'content': _answer.text,
+        'fileIds': [for (final f in _files) f.id],
+      });
       setState(() => _sub = Submission.fromJson(j));
     }, success: 'Đã nộp bài');
     if (mounted) setState(() => _busy = false);
@@ -214,6 +219,13 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           minLines: 6,
           maxLines: 20,
           decoration: const InputDecoration(labelText: 'Bài làm của bạn', border: OutlineInputBorder(), alignLabelWithHint: true),
+        ),
+        const SizedBox(height: 8),
+        AttachmentPicker(
+          initial: _files,
+          enabled: !graded,
+          onChanged: (f) => _files = f,
+          label: 'Đính kèm ảnh chụp bài làm, file PDF, Word...',
         ),
         const SizedBox(height: 12),
         if (!graded)
@@ -264,8 +276,9 @@ class _GradingScreenState extends State<GradingScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                child: Text(s.content),
+                child: Text(s.content.isEmpty ? '(Không có phần chữ)' : s.content),
               ),
+              if (s.attachments.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: FileList(s.attachments)),
               const SizedBox(height: 12),
               TextField(
                 controller: score,
@@ -312,7 +325,8 @@ class _GradingScreenState extends State<GradingScreen> {
             ListTile(
               leading: CircleAvatar(child: Text(s.student.fullName.characters.first)),
               title: Text(s.student.fullName),
-              subtitle: Text('${s.content.split('\n').first}\nNộp ${fmtDateTime(s.submittedAt)}${s.late ? ' · muộn' : ''}',
+              subtitle: Text(
+                  '${s.content.isEmpty ? '' : s.content.split('\n').first}${s.attachments.isEmpty ? '' : '${s.content.isEmpty ? '' : ' · '}📎 ${s.attachments.length} file'}\nNộp ${fmtDateTime(s.submittedAt)}${s.late ? ' · muộn' : ''}',
                   maxLines: 2, overflow: TextOverflow.ellipsis),
               isThreeLine: true,
               trailing: s.score == null
