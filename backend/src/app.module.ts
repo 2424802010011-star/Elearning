@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { AssignmentsService } from './assignments/assignments.service';
 import { AuthModule } from './auth/auth.module';
 import { ClassesModule } from './classes/classes.module';
 import { ClassesService } from './classes/classes.service';
@@ -62,6 +64,7 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
     ClassesModule,
     TimetableModule,
     MeetingsModule,
+    AssignmentsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -76,6 +79,7 @@ export class AppModule implements OnApplicationBootstrap {
     private readonly classes: ClassesService,
     private readonly timetable: TimetableService,
     private readonly meetings: MeetingsService,
+    private readonly assignments: AssignmentsService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -88,7 +92,7 @@ export class AppModule implements OnApplicationBootstrap {
       this.log.log(`Đã tạo tài khoản admin ${email}`);
     }
     if (this.cfg.get('SEED_DEMO', demo ? 'true' : 'false') === 'true') {
-      await seedDemo(this.users, this.classes, this.timetable, this.meetings);
+      await seedDemo(this.users, this.classes, this.timetable, this.meetings, this.assignments);
     }
   }
 }

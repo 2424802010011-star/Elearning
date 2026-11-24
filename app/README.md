@@ -5,6 +5,7 @@ Một mã nguồn chạy trên Android, iOS, Windows, macOS và trình duyệt w
 ## Đã có
 - Đăng nhập, đăng ký, nút đăng nhập nhanh bằng tài khoản mẫu
 - Lớp học: tạo lớp, mã mời, học sinh xin vào lớp, giáo viên duyệt/từ chối
+- Bài tập: giáo viên giao bài và chấm điểm, học sinh nộp bài và xem điểm, phụ huynh xem điểm của con
 - Lịch học của lớp, thêm/xóa tiết; thời khóa biểu cả tuần cho mọi vai trò
 - Phòng học: bảng trắng vẽ tay (bút, tẩy, màu, độ dày, hoàn tác, xóa bảng)
 - **AI làm đẹp nét**: tự nắn đường thẳng, hình tròn, elip, tam giác, hình chữ nhật, tứ giác, đa giác và đồ thị hình sin; có nút "Giữ nét gốc"

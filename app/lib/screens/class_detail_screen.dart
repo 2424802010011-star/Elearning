@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../ui.dart';
+import 'assignments_tab.dart';
 import 'meeting_room_screen.dart';
 
 class ClassDetailScreen extends StatefulWidget {
@@ -31,13 +32,14 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     final app = AppScope.of(context);
     final manage = _canManage(app);
     return DefaultTabController(
-      length: manage ? 3 : 2,
+      length: manage ? 4 : 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(_c.name),
           bottom: TabBar(tabs: [
             const Tab(text: 'Lịch học'),
             const Tab(text: 'Cuộc họp'),
+            const Tab(text: 'Bài tập'),
             if (manage) const Tab(text: 'Học sinh'),
           ]),
         ),
@@ -66,6 +68,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
             child: TabBarView(children: [
               _TimetableTab(classroom: _c, manage: manage),
               _MeetingsTab(classroom: _c, manage: manage),
+              AssignmentsTab(classroom: _c, manage: manage),
               if (manage) _StudentsTab(classroom: _c),
             ]),
           ),

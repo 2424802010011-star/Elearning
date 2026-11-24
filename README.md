@@ -7,10 +7,10 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 
 | Phần | Công nghệ | Trạng thái |
 |---|---|---|
-| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, quyền viết bảng |
+| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài tập và chấm điểm |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Backend cấp phòng và token xong; giao diện video chưa làm |
-| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng (thư mục `app`) |
+| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập (thư mục `app`) |
 | Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đồng bộ thời gian thực giữa giáo viên và học sinh |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
@@ -80,6 +80,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Lớp học | Tạo lớp có mã mời, học sinh xin vào lớp, giáo viên duyệt hoặc từ chối, đổi mã mời |
 | Thời khóa biểu | Tiết lặp hằng tuần, chặn giáo viên trùng giờ, xem lịch theo tuần cho mọi vai trò |
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
+| Bài tập | Giáo viên giao bài (hạn nộp, điểm tối đa), học sinh nộp/nộp lại khi chưa chấm, tự đánh dấu nộp muộn, giáo viên chấm điểm + nhận xét, phụ huynh xem điểm của con |
 | Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 
 Quy tắc phân quyền chính:

@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { AssignmentsService } from './assignments/assignments.service';
 import { ClassesService } from './classes/classes.service';
 import { EnrollmentStatus } from './classes/enrollment.entity';
 import { AuthUser } from './common/decorators';
@@ -10,7 +11,7 @@ import { UsersService } from './users/users.service';
 export const DEMO_PASSWORD = 'demo1234';
 
 /** Tạo dữ liệu mẫu để xem thử: 1 giáo viên, 3 học sinh, 1 phụ huynh, 1 lớp, thời khóa biểu, 1 cuộc họp. */
-export async function seedDemo(users: UsersService, classes: ClassesService, timetable: TimetableService, meetings: MeetingsService) {
+export async function seedDemo(users: UsersService, classes: ClassesService, timetable: TimetableService, meetings: MeetingsService, assignments: AssignmentsService) {
   if ((await users.list(Role.Teacher)).length > 0) return;
   const log = new Logger('Demo');
   const as = (u: { id: string; email: string; role: Role }): AuthUser => ({ id: u.id, email: u.email, role: u.role });
@@ -34,6 +35,21 @@ export async function seedDemo(users: UsersService, classes: ClassesService, tim
   await timetable.create(as(gv), lop.id, { title: 'Hình học', dayOfWeek: 3, startTime: '09:00', endTime: '09:45', startDate: start, location: 'Phòng 201' });
   await timetable.create(as(gv), lop.id, { title: 'Luyện đề', dayOfWeek: 5, startTime: '14:00', endTime: '15:30', startDate: start, location: 'Học online' });
   await meetings.create(as(gv), lop.id, { title: 'Ôn tập hàm số lượng giác' });
+
+  const bt1 = await assignments.create(as(gv), lop.id, {
+    title: 'Đồ thị hàm số y = 2sin(x)',
+    description: 'Nêu tập xác định, chu kỳ, giá trị lớn nhất và nhỏ nhất của y = 2sin(x).',
+    dueAt: '2026-12-20T23:59:00+07:00',
+    maxScore: 10,
+  });
+  await assignments.create(as(gv), lop.id, {
+    title: 'Tam giác vuông và định lý Pythagore',
+    description: 'Cho tam giác ABC vuông tại A, AB = 3, AC = 4. Tính BC và đường cao AH.',
+    maxScore: 10,
+  });
+  const nop = await assignments.submit(as(hs1), bt1.id, { content: 'Tập xác định R, chu kỳ 2π, lớn nhất 2, nhỏ nhất -2.' });
+  await assignments.grade(as(gv), bt1.id, nop.id, { score: 9, feedback: 'Đúng. Nên ghi thêm khi nào đạt giá trị lớn nhất.' });
+  await assignments.submit(as(hs2), bt1.id, { content: 'Chu kỳ là π.' });
 
   log.log(`Đã tạo dữ liệu mẫu. Mật khẩu mọi tài khoản demo: ${DEMO_PASSWORD}. Mã mời lớp Toán 10A1: ${lop.inviteCode}`);
 }

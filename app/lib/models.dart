@@ -123,3 +123,70 @@ class Meeting {
 }
 
 const dayNames = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+
+class Submission {
+  final String id;
+  final User student;
+  final String content;
+  final DateTime submittedAt;
+  final bool late;
+  final double? score;
+  final String? feedback;
+  Submission({
+    required this.id,
+    required this.student,
+    required this.content,
+    required this.submittedAt,
+    required this.late,
+    this.score,
+    this.feedback,
+  });
+  factory Submission.fromJson(Map<String, dynamic> j) => Submission(
+        id: j['id'],
+        student: User.fromJson(j['student']),
+        content: j['content'] ?? '',
+        submittedAt: DateTime.parse(j['submittedAt']).toLocal(),
+        late: j['late'] == true,
+        score: (j['score'] as num?)?.toDouble(),
+        feedback: j['feedback'],
+      );
+}
+
+class Assignment {
+  final String id;
+  final String title;
+  final String description;
+  final DateTime? dueAt;
+  final double maxScore;
+  // Giáo viên
+  final int? submittedCount, gradedCount, totalStudents;
+  // Học sinh / phụ huynh
+  final List<Submission> submissions;
+  Assignment({
+    required this.id,
+    required this.title,
+    required this.description,
+    this.dueAt,
+    required this.maxScore,
+    this.submittedCount,
+    this.gradedCount,
+    this.totalStudents,
+    this.submissions = const [],
+  });
+  factory Assignment.fromJson(Map<String, dynamic> j) => Assignment(
+        id: j['id'],
+        title: j['title'],
+        description: j['description'] ?? '',
+        dueAt: j['dueAt'] == null ? null : DateTime.parse(j['dueAt']).toLocal(),
+        maxScore: (j['maxScore'] as num).toDouble(),
+        submittedCount: j['submittedCount'],
+        gradedCount: j['gradedCount'],
+        totalStudents: j['totalStudents'],
+        submissions: [for (final s in (j['submissions'] as List? ?? [])) Submission.fromJson(s)],
+      );
+}
+
+String fmtDateTime(DateTime d) =>
+    '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} ${d.day}/${d.month}/${d.year}';
+
+String fmtScore(double s) => s == s.roundToDouble() ? s.toInt().toString() : s.toString();
