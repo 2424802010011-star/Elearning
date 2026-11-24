@@ -19,7 +19,7 @@ echo.
 echo Dang khoi dong may chu. Trinh duyet se tu mo khi san sang.
 echo Muon tat may chu thi dong cua so nay.
 echo.
-start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for($i=0;$i -lt 300;$i++){try{Invoke-WebRequest -UseBasicParsing http://localhost:3000/docs -TimeoutSec 2 | Out-Null; Start-Process 'http://localhost:3000/docs'; break}catch{Start-Sleep -Seconds 1}}"
+start "" /b powershell -NoProfile -WindowStyle Hidden -Command "for($i=0;$i -lt 300;$i++){try{Invoke-WebRequest -UseBasicParsing http://localhost:3000/docs -TimeoutSec 2 | Out-Null; Start-Process 'http://localhost:3000/'; break}catch{Start-Sleep -Seconds 1}}"
 call npm run demo
 echo.
 echo May chu da dung. Neu co chu ERROR o tren, hay chup man hinh gui cho Claude.

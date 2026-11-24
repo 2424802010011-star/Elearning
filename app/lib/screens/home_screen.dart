@@ -1,0 +1,120 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../app_state.dart';
+import '../models.dart';
+import 'classes_screen.dart';
+import 'timetable_screen.dart';
+
+/// Khung chính: thanh điều hướng dưới (điện thoại) hoặc bên trái (máy tính).
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _tab = 0;
+
+  static const _dest = [
+    (Icons.class_outlined, Icons.class_, 'Lớp học'),
+    (Icons.calendar_month_outlined, Icons.calendar_month, 'Thời khóa biểu'),
+    (Icons.person_outline, Icons.person, 'Tài khoản'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final body = switch (_tab) {
+      0 => const ClassesScreen(),
+      1 => const TimetableScreen(),
+      _ => const AccountScreen(),
+    };
+    if (wide) {
+      return Scaffold(
+        body: Row(children: [
+          NavigationRail(
+            selectedIndex: _tab,
+            onDestinationSelected: (i) => setState(() => _tab = i),
+            labelType: NavigationRailLabelType.all,
+            leading: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Icon(Icons.draw_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
+            ),
+            destinations: [
+              for (final d in _dest) NavigationRailDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: Text(d.$3)),
+            ],
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(child: body),
+        ]),
+      );
+    }
+    return Scaffold(
+      body: body,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tab,
+        onDestinationSelected: (i) => setState(() => _tab = i),
+        destinations: [
+          for (final d in _dest) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3),
+        ],
+      ),
+    );
+  }
+}
+
+class AccountScreen extends StatelessWidget {
+  const AccountScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final u = app.user!;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tài khoản')),
+      body: ListView(children: [
+        ListTile(
+          leading: CircleAvatar(child: Text(u.fullName.characters.first)),
+          title: Text(u.fullName),
+          subtitle: Text('${u.email}\n${roleLabel(u.role)}'),
+          isThreeLine: true,
+        ),
+        if (u.role == Role.parent) const _ChildrenTile(),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.dns_outlined),
+          title: const Text('Máy chủ'),
+          subtitle: Text(app.api.baseUrl),
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout),
+          title: const Text('Đăng xuất'),
+          onTap: app.logout,
+        ),
+      ]),
+    );
+  }
+}
+
+class _ChildrenTile extends StatefulWidget {
+  const _ChildrenTile();
+  @override
+  State<_ChildrenTile> createState() => _ChildrenTileState();
+}
+
+class _ChildrenTileState extends State<_ChildrenTile> {
+  Future<List<User>>? _f;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _f ??= AppScope.of(context).api.get('/me/children').then((l) => [for (final j in l) User.fromJson(j)]);
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<List<User>>(
+        future: _f,
+        builder: (c, s) => ListTile(
+          leading: const Icon(Icons.family_restroom),
+          title: const Text('Con của bạn'),
+          subtitle: Text(s.hasData ? (s.data!.isEmpty ? 'Chưa liên kết, liên hệ nhà trường' : s.data!.map((u) => u.fullName).join(', ')) : '...'),
+        ),
+      );
+}

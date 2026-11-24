@@ -7,17 +7,18 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 
 | Phần | Công nghệ | Trạng thái |
 |---|---|---|
-| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đang làm |
+| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, quyền viết bảng |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
-| Họp video | LiveKit (WebRTC) | Backend xong phần cấp phòng và token |
-| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Chưa bắt đầu |
-| Bảng trắng, AI nhận diện nét | Flutter + Yjs, ML Kit / mô hình tự huấn luyện | Chưa bắt đầu |
+| Họp video | LiveKit (WebRTC) | Backend cấp phòng và token xong; giao diện video chưa làm |
+| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng (thư mục `app`) |
+| Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin; chưa đồng bộ nhiều người |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
 
 1. Cài **Node.js bản LTS** từ https://nodejs.org (chỉ cần làm một lần).
 2. Bấm đúp file **`chay-thu.bat`**. Lần đầu sẽ mất vài phút để tải thư viện.
-3. Trình duyệt tự mở **http://localhost:3000/docs**. Đây là trang xem và thử toàn bộ API.
+3. Trình duyệt tự mở **http://localhost:3000**: giao diện app EduBoard. Bấm nút "Giáo viên", "Học sinh"... để đăng nhập nhanh.
+   Trang **http://localhost:3000/docs** dùng để xem và thử từng API.
 
 Không cần cài cơ sở dữ liệu: bản chạy thử lưu vào file `backend/eduboard-demo.sqlite` và tự tạo dữ liệu mẫu.
 Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
@@ -31,6 +32,13 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 | hocsinh1@demo.vn, hocsinh2@demo.vn | Học sinh đã vào lớp |
 | hocsinh3@demo.vn | Học sinh đang chờ duyệt |
 | phuhuynh@demo.vn | Phụ huynh của hocsinh1 |
+
+### Thử trong app
+
+1. Đăng nhập Giáo viên → Toán 10A1 → tab Cuộc họp → Mở phòng.
+2. Bật "AI làm đẹp nét", vẽ tay một vòng tròn, tam giác, đường lượn sóng: app tự nắn lại cho gọn.
+3. Bấm biểu tượng quyền viết (góc trên) để cho học sinh viết lên bảng.
+4. Mở thêm một cửa sổ ẩn danh, đăng nhập Học sinh, vào cùng cuộc họp để thấy quyền viết thay đổi.
 
 ### Thử trên trang /docs
 
