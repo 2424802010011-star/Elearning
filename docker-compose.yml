@@ -1,11 +1,80 @@
+# Triển khai EduBoard bằng Docker. Xem mục "Triển khai lên máy chủ" trong README.
+#
+#   cp deploy.env.example .env      # rồi sửa mật khẩu, khóa bí mật
+#   docker compose up -d --build    # CSDL + máy chủ EduBoard ở cổng 3000
+#   docker compose --profile video up -d     # thêm máy chủ họp video LiveKit (máy chủ Linux)
+#   docker compose --profile https up -d     # thêm HTTPS tự động bằng Caddy (cần tên miền)
+#
+# Chỉ cần PostgreSQL để lập trình trên máy: docker compose up -d db
+
 services:
   db:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: eduboard
-      POSTGRES_PASSWORD: eduboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eduboard}
       POSTGRES_DB: eduboard
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:${DB_PORT:-5432}:5432"]   # chỉ mở cho máy này (để lập trình), không mở ra ngoài
     volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduboard -d eduboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: ./backend
+    image: eduboard:latest
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://eduboard:${POSTGRES_PASSWORD:-eduboard}@db:5432/eduboard
+      JWT_SECRET: ${JWT_SECRET:-}      # bắt buộc, đặt trong file .env
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+      REMIND_MINUTES: ${REMIND_MINUTES:-15}
+    ports: ["${APP_PORT:-3000}:3000"]
+    volumes: [uploads:/data/uploads]
+
+  # Máy chủ họp video. Dùng mạng của máy chủ (chỉ chạy được trên Linux) để trình duyệt kết nối thẳng.
+  # Mở tường lửa: TCP 7880, 7881 và UDP 7882.
+  livekit:
+    profiles: [video]
+    image: livekit/livekit-server:v1.8.4
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: ${LIVEKIT_USE_EXTERNAL_IP:-false}
+        keys:
+          ${LIVEKIT_API_KEY:-devkey}: ${LIVEKIT_API_SECRET:-secret}
+
+  # HTTPS tự động (Let's Encrypt). Trình duyệt chỉ cho dùng camera, micro qua HTTPS (trừ localhost).
+  # Cần trỏ DOMAIN và LIVEKIT_DOMAIN về IP máy chủ, mở cổng 80 và 443.
+  caddy:
+    profiles: [https]
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DOMAIN: ${DOMAIN:-}
+      LIVEKIT_DOMAIN: ${LIVEKIT_DOMAIN:-}
+      APP_PORT: ${APP_PORT:-3000}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+
 volumes:
   dbdata:
+  uploads:
+  caddydata:

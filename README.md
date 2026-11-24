@@ -90,6 +90,31 @@ TEST_DB=sqlite npm test      # không cần PostgreSQL
 npm test                     # trên PostgreSQL, database eduboard_test (bị xóa mỗi lần chạy)
 ```
 
+## Triển khai lên máy chủ (Docker)
+
+Cần một máy chủ Linux có Docker. Gói gồm: PostgreSQL, máy chủ EduBoard (API + giao diện web), máy chủ họp video LiveKit, và HTTPS tự động bằng Caddy.
+
+1. Chép cả thư mục `eduboard` lên máy chủ. Thư mục `backend/public` (giao diện web đã build) phải có sẵn; nếu chưa có thì build: `cd app && flutter build web --release --no-web-resources-cdn` rồi chép `app/build/web` thành `backend/public`.
+2. Chép `deploy.env.example` thành `.env`, đổi `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `POSTGRES_PASSWORD`, `LIVEKIT_API_SECRET`.
+3. Chạy:
+
+```bash
+docker compose up -d --build                    # CSDL + EduBoard ở cổng 3000
+docker compose --profile video up -d            # thêm họp video (mở TCP 7880, 7881 và UDP 7882)
+```
+
+4. Mở `http://<IP máy chủ>:3000`, đăng nhập bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Kiểm tra máy chủ: `http://<IP máy chủ>:3000/api/health`.
+
+**Camera và micro chỉ chạy qua HTTPS** (trừ khi mở bằng localhost). Dùng thật thì cần hai tên miền trỏ về máy chủ, ví dụ `eduboard.truong.edu.vn` và `video.truong.edu.vn`, đặt `DOMAIN`, `LIVEKIT_DOMAIN` trong `.env`, đổi `LIVEKIT_URL=wss://video.truong.edu.vn`, mở cổng 80 và 443, rồi chạy:
+
+```bash
+docker compose --profile video --profile https up -d --build
+```
+
+Caddy tự xin chứng chỉ HTTPS miễn phí. Bảng CSDL tự tạo và tự cập nhật (migration) mỗi lần máy chủ khởi động. File tải lên nằm trong volume `uploads`, dữ liệu trong volume `dbdata`: sao lưu bằng `docker compose exec db pg_dump -U eduboard eduboard > saoluu.sql`.
+
+Cập nhật phiên bản mới: chép mã mới đè lên rồi `docker compose up -d --build`.
+
 ## API
 
 Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Bearer <accessToken>`. Danh sách đầy đủ, có thể bấm thử, nằm ở `/docs`.

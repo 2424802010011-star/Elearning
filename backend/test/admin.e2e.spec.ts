@@ -37,6 +37,10 @@ describe('Quản trị', () => {
   });
   afterAll(async () => app?.close());
 
+  it('kiểm tra sức khỏe máy chủ không cần đăng nhập', async () => {
+    expect((await http().get('/api/health').expect(200)).body).toEqual({ ok: true, db: true });
+  });
+
   it('chỉ admin xem được danh sách và số liệu', async () => {
     await http().get('/api/users').set(auth('gv')).expect(403);
     await http().get('/api/admin/stats').set(auth('gv')).expect(403);

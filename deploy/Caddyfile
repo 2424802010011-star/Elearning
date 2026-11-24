@@ -1,0 +1,10 @@
+# Giao diện + API EduBoard
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy localhost:{$APP_PORT}
+}
+
+# Máy chủ họp video (wss://LIVEKIT_DOMAIN)
+{$LIVEKIT_DOMAIN} {
+	reverse_proxy localhost:7880
+}
