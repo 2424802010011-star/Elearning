@@ -67,6 +67,22 @@ Họp video cần máy chủ LiveKit. Bản Windows đã có sẵn ở `tools\li
 (nếu Windows hỏi tường lửa thì chọn Allow). Máy khác: tải tại https://github.com/livekit/livekit/releases rồi chạy `livekit-server --dev`.
 Học sinh dùng máy khác trong mạng LAN: đặt `LIVEKIT_URL=ws://<IP máy chủ>:7880` và chạy `livekit-server --dev --bind 0.0.0.0`.
 
+### Cơ sở dữ liệu và migration (PostgreSQL)
+
+Bảng được tạo và cập nhật bằng migration trong `backend/src/migrations`. Máy chủ tự chạy các migration còn thiếu mỗi lần khởi động, nên chỉ cần tạo một database trống rồi đặt `DATABASE_URL`.
+
+Khi sửa entity (thêm cột, thêm bảng):
+
+```bash
+npm run migration:generate -- src/migrations/TenThayDoi   # sinh file migration từ phần khác nhau giữa entity và database
+npm run migration:run                                      # chạy migration còn thiếu
+npm run migration:revert                                   # hoàn tác migration gần nhất
+npm run migration:check                                    # báo lỗi nếu entity đã đổi mà chưa có migration
+```
+
+Entity mới phải thêm vào `src/entities.ts`. Test trên PostgreSQL kiểm tra migration khớp với entity và chạy ngược được.
+Chạy thử bằng SQLite thì không cần migration: bảng tự khớp theo entity.
+
 ### Test tự động
 
 ```bash
@@ -101,4 +117,4 @@ Quy tắc phân quyền chính:
 
 - Mật khẩu băm bằng bcrypt, đăng nhập bằng JWT.
 - File tải lên lưu trong thư mục `backend/uploads` (đổi bằng `UPLOAD_DIR`, giới hạn bằng `MAX_UPLOAD_MB`). File HTML/SVG luôn bị bắt tải về, không mở trực tiếp, để tránh chạy mã lạ.
-- `DB_SYNC=true` tự tạo bảng, chỉ dùng cho dev/test. Trước khi lên production cần chuyển sang migration.
+- PostgreSQL dùng migration (xem mục "Cơ sở dữ liệu và migration"). `DB_SYNC=true` chỉ để thử nghiệm nhanh.

@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Logger, Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -27,8 +28,10 @@ import { AdminModule } from './admin/admin.module';
 import { UsersService } from './users/users.service';
 
 /**
- * Có DATABASE_URL thì dùng PostgreSQL (môi trường thật).
- * Không có thì dùng SQLite trong file (sql.js), không cần cài gì thêm, phù hợp để chạy thử.
+ * Có DATABASE_URL thì dùng PostgreSQL (môi trường thật). Bảng được tạo và cập nhật bằng migration
+ * (thư mục src/migrations), tự chạy khi máy chủ khởi động; DB_MIGRATE=false để tắt.
+ * Không có DATABASE_URL thì dùng SQLite trong file (sql.js), không cần cài gì thêm, phù hợp để chạy thử;
+ * bảng SQLite tự khớp theo entity.
  */
 function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
   const url = cfg.get<string>('DATABASE_URL');
@@ -37,8 +40,12 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
       type: 'postgres',
       url,
       autoLoadEntities: true,
+      // DB_SYNC=true chỉ dùng khi thử nghiệm nhanh: tự sửa bảng theo entity, có thể mất dữ liệu.
       synchronize: cfg.get('DB_SYNC') === 'true',
       dropSchema: cfg.get('DB_DROP_SCHEMA') === 'true',
+      migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+      migrationsRun: cfg.get('DB_SYNC') !== 'true' && cfg.get('DB_MIGRATE') !== 'false',
+      migrationsTransactionMode: 'each',
     };
   }
   const file = cfg.get<string>('SQLITE_FILE', 'eduboard-demo.sqlite');

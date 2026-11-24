@@ -7,7 +7,7 @@ if (process.env.TEST_DB === 'sqlite') {
 }
 process.env.SEED_DEMO = 'false';
 process.env.JWT_SECRET = 'test-secret';
-process.env.DB_SYNC = 'true';
+delete process.env.DB_SYNC; // PostgreSQL: tạo bảng bằng migration như môi trường thật
 process.env.DB_DROP_SCHEMA = 'true';
 process.env.ADMIN_EMAIL = 'admin@test.vn';
 process.env.ADMIN_PASSWORD = 'admin12345';
@@ -16,6 +16,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { TokenVerifier } from 'livekit-server-sdk';
+import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/setup';
 
@@ -309,5 +310,18 @@ describe('EduBoard API', () => {
       await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs1')).expect(400);
       await http().post(`/api/meetings/${meetingId}/join`).set(auth('gv1')).expect(400);
     });
+  });
+
+  // Để cuối cùng: bài này xóa rồi tạo lại toàn bộ bảng.
+  (process.env.TEST_DB === 'sqlite' ? it.skip : it)('migration khớp với entity và chạy ngược được (PostgreSQL)', async () => {
+    const ds = app.get(DataSource);
+    expect(ds.migrations.length).toBeGreaterThan(0);
+    expect(await ds.showMigrations()).toBe(false); // không còn migration nào chưa chạy
+    const diff = await ds.driver.createSchemaBuilder().log();
+    expect(diff.upQueries.map((q) => q.query)).toEqual([]); // entity đổi mà quên tạo migration thì bài này báo
+    for (let i = 0; i < ds.migrations.length; i++) await ds.undoLastMigration();
+    expect(await ds.query(`SELECT to_regclass('public.users') AS t`)).toEqual([{ t: null }]);
+    await ds.runMigrations();
+    expect((await ds.driver.createSchemaBuilder().log()).upQueries).toEqual([]);
   });
 });
