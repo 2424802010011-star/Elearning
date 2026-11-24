@@ -68,7 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
-          for (final d in dest) NavigationDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: d.$3),
+          for (final d in dest)
+            NavigationDestination(
+              icon: _icon(d.$1),
+              selectedIcon: _icon(d.$2),
+              // Thanh dưới có 5 mục thì rút gọn để chữ không xuống dòng.
+              label: dest.length > 4 && d.$3 == 'Thời khóa biểu' ? 'Lịch học' : d.$3,
+              tooltip: d.$3,
+            ),
         ],
       ),
     );

@@ -41,7 +41,7 @@ describe('Chế độ chạy thử (SQLite + dữ liệu mẫu)', () => {
 
     const ph = await login('phuhuynh@demo.vn');
     const week = await request(app.getHttpServer())
-      .get('/api/timetable/week?date=2026-12-09')
+      .get('/api/timetable/week')
       .set('Authorization', `Bearer ${ph}`)
       .expect(200);
     expect(week.body.sessions.map((s: any) => s.title)).toEqual(['Đại số', 'Hình học', 'Luyện đề']);

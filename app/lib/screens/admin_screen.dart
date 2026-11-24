@@ -11,20 +11,23 @@ import '../ui.dart';
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
   @override
-  Widget build(BuildContext context) => DefaultTabController(
-        length: 3,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Quản trị'),
-            bottom: const TabBar(tabs: [
-              Tab(icon: Icon(Icons.insights_outlined), text: 'Tổng quan'),
-              Tab(icon: Icon(Icons.people_outline), text: 'Người dùng'),
-              Tab(icon: Icon(Icons.family_restroom), text: 'Phụ huynh – học sinh'),
-            ]),
-          ),
-          body: const TabBarView(children: [StatsTab(), UsersTab(), ParentLinksTab()]),
+  Widget build(BuildContext context) {
+    final narrow = MediaQuery.sizeOf(context).width < 600;
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Quản trị'),
+          bottom: TabBar(tabs: [
+            const Tab(icon: Icon(Icons.insights_outlined), text: 'Tổng quan'),
+            const Tab(icon: Icon(Icons.people_outline), text: 'Người dùng'),
+            Tab(icon: const Icon(Icons.family_restroom), text: narrow ? 'Phụ huynh' : 'Phụ huynh – học sinh'),
+          ]),
         ),
-      );
+        body: const TabBarView(children: [StatsTab(), UsersTab(), ParentLinksTab()]),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------- Tổng quan

@@ -48,7 +48,7 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 
 1. Mở `POST /api/auth/login` → **Try it out** → nhập email, mật khẩu → **Execute**. Sao chép `accessToken`.
 2. Bấm nút **Authorize** ở đầu trang, dán token, bấm **Authorize**.
-3. Thử các API khác, ví dụ `GET /api/classes`, `GET /api/timetable/week` (nhập date = 2026-12-09), `POST /api/meetings/{id}/join`.
+3. Thử các API khác, ví dụ `GET /api/classes`, `GET /api/timetable/week` (để trống date là tuần này), `POST /api/meetings/{id}/join`.
 4. Đăng nhập bằng tài khoản khác để thấy mỗi vai trò nhìn thấy dữ liệu khác nhau.
 
 ## Chạy bằng dòng lệnh

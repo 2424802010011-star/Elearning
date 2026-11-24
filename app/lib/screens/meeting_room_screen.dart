@@ -182,14 +182,21 @@ class _Toolbar extends StatelessWidget {
   final bool isHost;
   const _Toolbar({required this.board, required this.colors, required this.isHost});
 
+  /// Một hàng công cụ, cuộn ngang nếu màn hình quá hẹp.
+  Widget _row(List<Widget> children) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Row(children: children),
+      );
+
   @override
   Widget build(BuildContext context) {
+    // Điện thoại: chia hai hàng để mọi nút đều thấy được, không phải cuộn.
+    final compact = MediaQuery.sizeOf(context).width < 760;
     return ListenableBuilder(
       listenable: board,
-      builder: (context, _) => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(children: [
+      builder: (context, _) {
+        final tools = [
           IconButton(
             tooltip: 'Bút',
             isSelected: board.tool == BoardTool.pen,
@@ -202,7 +209,7 @@ class _Toolbar extends StatelessWidget {
             icon: const Icon(Icons.auto_fix_normal),
             onPressed: () => board.setTool(BoardTool.eraser),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: compact ? 2 : 8),
           for (final c in colors)
             GestureDetector(
               onTap: () => board.setColor(c),
@@ -220,7 +227,8 @@ class _Toolbar extends StatelessWidget {
                 ),
               ),
             ),
-          const SizedBox(width: 8),
+        ];
+        final widths = [
           for (final w in [2.0, 4.0, 8.0])
             IconButton(
               tooltip: 'Nét ${w.toInt()}',
@@ -228,32 +236,40 @@ class _Toolbar extends StatelessWidget {
               icon: Icon(Icons.circle, size: 6 + w * 1.5),
               onPressed: () => board.setWidth(w),
             ),
-          const SizedBox(width: 8),
-          SegmentedButton<AiMode>(
-            showSelectedIcon: false,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            segments: const [
-              ButtonSegment(value: AiMode.off, label: Text('Viết tự do'), tooltip: 'Giữ nguyên nét viết tay'),
-              ButtonSegment(
-                value: AiMode.shapes,
-                icon: Icon(Icons.auto_awesome, size: 18),
-                label: Text('AI hình'),
-                tooltip: 'Nắn đường thẳng, hình học, đồ thị sin',
-              ),
-              ButtonSegment(
-                value: AiMode.math,
-                icon: Icon(Icons.functions, size: 18),
-                label: Text('AI chữ & toán'),
-                tooltip: 'Đọc chữ số, chữ, ký hiệu toán, phân số, căn và viết lại cho gọn',
-              ),
-            ],
-            selected: {board.aiMode},
-            onSelectionChanged: (v) => board.setAiMode(v.first),
-          ),
+        ];
+        final ai = SegmentedButton<AiMode>(
+          showSelectedIcon: false,
+          style: const ButtonStyle(visualDensity: VisualDensity.compact),
+          segments: [
+            ButtonSegment(value: AiMode.off, label: Text(compact ? 'Tự do' : 'Viết tự do'), tooltip: 'Giữ nguyên nét viết tay'),
+            ButtonSegment(
+              value: AiMode.shapes,
+              icon: compact ? null : const Icon(Icons.auto_awesome, size: 18),
+              label: const Text('AI hình'),
+              tooltip: 'Nắn đường thẳng, hình học, đồ thị sin',
+            ),
+            ButtonSegment(
+              value: AiMode.math,
+              icon: compact ? null : const Icon(Icons.functions, size: 18),
+              label: Text(compact ? 'AI toán' : 'AI chữ & toán'),
+              tooltip: 'Đọc chữ số, chữ, ký hiệu toán, phân số, căn và viết lại cho gọn',
+            ),
+          ],
+          selected: {board.aiMode},
+          onSelectionChanged: (v) => board.setAiMode(v.first),
+        );
+        final edit = [
           IconButton(tooltip: 'Hoàn tác', icon: const Icon(Icons.undo), onPressed: board.canUndo ? board.undo : null),
           if (isHost) IconButton(tooltip: 'Xóa bảng', icon: const Icon(Icons.delete_sweep_outlined), onPressed: board.clear),
-        ]),
-      ),
+        ];
+        if (compact) {
+          return Column(mainAxisSize: MainAxisSize.min, children: [
+            _row([...tools, const SizedBox(width: 4), ...edit]),
+            _row([ai, const SizedBox(width: 4), ...widths]),
+          ]);
+        }
+        return _row([...tools, const SizedBox(width: 8), ...widths, const SizedBox(width: 8), ai, ...edit]);
+      },
     );
   }
 }

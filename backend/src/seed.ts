@@ -8,8 +8,15 @@ import { FilesService } from './files/files.service';
 import { LessonsService } from './lessons/lessons.service';
 import { MeetingsService } from './meetings/meetings.service';
 import { QuizzesService } from './quizzes/quizzes.service';
+import { localParts } from './timetable/reminders.service';
 import { TimetableService } from './timetable/timetable.service';
 import { UsersService } from './users/users.service';
+
+/** 23:59 giờ Việt Nam, [n] ngày sau hôm nay (hạn nộp của dữ liệu mẫu). */
+function inDays(n: number): string {
+  const d = new Date(Date.now() + n * 86_400_000);
+  return `${localParts(d, process.env.DISPLAY_TZ ?? 'Asia/Ho_Chi_Minh').date}T23:59:00+07:00`;
+}
 
 export const DEMO_PASSWORD = 'demo1234';
 
@@ -48,7 +55,11 @@ export async function seedDemo(
   }
   await classes.join(as(hs3), lop.inviteCode); // để lại 1 yêu cầu chờ duyệt
 
-  const start = '2026-12-07';
+  // Lịch bắt đầu từ Thứ Hai tuần này, để mở app là thấy ngay thời khóa biểu.
+  const today = localParts(new Date(), process.env.DISPLAY_TZ ?? 'Asia/Ho_Chi_Minh');
+  const monday = new Date(`${today.date}T00:00:00Z`);
+  monday.setUTCDate(monday.getUTCDate() - (today.dow - 1));
+  const start = monday.toISOString().slice(0, 10);
   await timetable.create(as(gv), lop.id, { title: 'Đại số', dayOfWeek: 1, startTime: '07:30', endTime: '08:15', startDate: start, location: 'Học online' });
   await timetable.create(as(gv), lop.id, { title: 'Hình học', dayOfWeek: 3, startTime: '09:00', endTime: '09:45', startDate: start, location: 'Phòng 201' });
   await timetable.create(as(gv), lop.id, { title: 'Luyện đề', dayOfWeek: 5, startTime: '14:00', endTime: '15:30', startDate: start, location: 'Học online' });
@@ -57,7 +68,7 @@ export async function seedDemo(
   const bt1 = await assignments.create(as(gv), lop.id, {
     title: 'Đồ thị hàm số y = 2sin(x)',
     description: 'Nêu tập xác định, chu kỳ, giá trị lớn nhất và nhỏ nhất của y = 2sin(x).',
-    dueAt: '2026-12-20T23:59:00+07:00',
+    dueAt: inDays(14),
     maxScore: 10,
   });
   await assignments.create(as(gv), lop.id, {
