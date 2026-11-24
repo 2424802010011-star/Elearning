@@ -6,6 +6,7 @@ import '../models.dart';
 import '../ui.dart';
 import 'assignments_tab.dart';
 import 'meeting_room_screen.dart';
+import 'quizzes_tab.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final Classroom classroom;
@@ -32,14 +33,15 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     final app = AppScope.of(context);
     final manage = _canManage(app);
     return DefaultTabController(
-      length: manage ? 4 : 3,
+      length: manage ? 5 : 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(_c.name),
-          bottom: TabBar(tabs: [
+          bottom: TabBar(isScrollable: MediaQuery.sizeOf(context).width < 600, tabAlignment: MediaQuery.sizeOf(context).width < 600 ? TabAlignment.start : null, tabs: [
             const Tab(text: 'Lịch học'),
             const Tab(text: 'Cuộc họp'),
             const Tab(text: 'Bài tập'),
+            const Tab(text: 'Kiểm tra'),
             if (manage) const Tab(text: 'Học sinh'),
           ]),
         ),
@@ -69,6 +71,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
               _TimetableTab(classroom: _c, manage: manage),
               _MeetingsTab(classroom: _c, manage: manage),
               AssignmentsTab(classroom: _c, manage: manage),
+              QuizzesTab(classroom: _c, manage: manage),
               if (manage) _StudentsTab(classroom: _c),
             ]),
           ),

@@ -12,6 +12,8 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
 import { Role } from './common/role.enum';
 import { MeetingsModule } from './meetings/meetings.module';
 import { MeetingsService } from './meetings/meetings.service';
+import { QuizzesModule } from './quizzes/quizzes.module';
+import { QuizzesService } from './quizzes/quizzes.service';
 import { seedDemo } from './seed';
 import { TimetableModule } from './timetable/timetable.module';
 import { TimetableService } from './timetable/timetable.service';
@@ -65,6 +67,7 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
     TimetableModule,
     MeetingsModule,
     AssignmentsModule,
+    QuizzesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -80,6 +83,7 @@ export class AppModule implements OnApplicationBootstrap {
     private readonly timetable: TimetableService,
     private readonly meetings: MeetingsService,
     private readonly assignments: AssignmentsService,
+    private readonly quizzes: QuizzesService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -92,7 +96,7 @@ export class AppModule implements OnApplicationBootstrap {
       this.log.log(`Đã tạo tài khoản admin ${email}`);
     }
     if (this.cfg.get('SEED_DEMO', demo ? 'true' : 'false') === 'true') {
-      await seedDemo(this.users, this.classes, this.timetable, this.meetings, this.assignments);
+      await seedDemo(this.users, this.classes, this.timetable, this.meetings, this.assignments, this.quizzes);
     }
   }
 }

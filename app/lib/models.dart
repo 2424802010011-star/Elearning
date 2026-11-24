@@ -189,4 +189,121 @@ class Assignment {
 String fmtDateTime(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} ${d.day}/${d.month}/${d.year}';
 
-String fmtScore(double s) => s == s.roundToDouble() ? s.toInt().toString() : s.toString();
+/// Điểm theo kiểu Việt Nam: 7,5 thay vì 7.5.
+String fmtScore(double s) => s == s.roundToDouble() ? s.toInt().toString() : s.toString().replaceAll('.', ',');
+
+class QuizQuestion {
+  final String id;
+  final String text;
+  final List<String> options;
+  final bool multiple;
+  final double points;
+  /// Chỉ có với giáo viên, hoặc học sinh sau khi nộp (nếu giáo viên cho xem đáp án).
+  final List<int>? correct;
+  QuizQuestion({required this.id, required this.text, required this.options, required this.multiple, required this.points, this.correct});
+  factory QuizQuestion.fromJson(Map<String, dynamic> j) {
+    final correct = (j['correct'] as List?)?.map((e) => e as int).toList();
+    return QuizQuestion(
+      id: j['id'],
+      text: j['text'],
+      options: [for (final o in j['options'] as List) o as String],
+      multiple: j['multiple'] == true || (correct?.length ?? 0) > 1,
+      points: (j['points'] as num?)?.toDouble() ?? 1,
+      correct: correct,
+    );
+  }
+}
+
+class QuizAttempt {
+  final String id;
+  final String? studentName;
+  final DateTime startedAt;
+  final DateTime? submittedAt;
+  final DateTime? deadline;
+  final double? score;
+  final double maxScore;
+  final bool late;
+  final Map<String, List<int>> answers;
+  QuizAttempt({
+    required this.id,
+    this.studentName,
+    required this.startedAt,
+    this.submittedAt,
+    this.deadline,
+    this.score,
+    required this.maxScore,
+    required this.late,
+    this.answers = const {},
+  });
+  bool get submitted => submittedAt != null;
+  factory QuizAttempt.fromJson(Map<String, dynamic> j) => QuizAttempt(
+        id: j['id'],
+        studentName: (j['student'] as Map?)?['fullName'],
+        startedAt: DateTime.parse(j['startedAt']).toLocal(),
+        submittedAt: j['submittedAt'] == null ? null : DateTime.parse(j['submittedAt']).toLocal(),
+        deadline: j['deadline'] == null ? null : DateTime.parse(j['deadline']).toLocal(),
+        score: (j['score'] as num?)?.toDouble(),
+        maxScore: (j['maxScore'] as num?)?.toDouble() ?? 0,
+        late: j['late'] == true,
+        answers: {
+          for (final e in ((j['answers'] as Map?) ?? {}).entries) e.key as String: [for (final v in e.value as List) v as int],
+        },
+      );
+}
+
+class Quiz {
+  final String id;
+  final String title;
+  final String description;
+  final int? durationMinutes;
+  final DateTime? dueAt;
+  final bool published;
+  final bool showAnswers;
+  final int questionCount;
+  final double maxScore;
+  // Giáo viên
+  final int? submittedCount, totalStudents;
+  final double? averageScore;
+  // Học sinh: lượt làm của mình. Phụ huynh: lượt làm của con.
+  final QuizAttempt? attempt;
+  final List<QuizAttempt> attempts;
+  final List<QuizQuestion> questions;
+  final DateTime? serverTime;
+  Quiz({
+    required this.id,
+    required this.title,
+    required this.description,
+    this.durationMinutes,
+    this.dueAt,
+    required this.published,
+    required this.showAnswers,
+    required this.questionCount,
+    required this.maxScore,
+    this.submittedCount,
+    this.totalStudents,
+    this.averageScore,
+    this.attempt,
+    this.attempts = const [],
+    this.questions = const [],
+    this.serverTime,
+  });
+  bool get overdue => dueAt != null && DateTime.now().isAfter(dueAt!);
+  factory Quiz.fromJson(Map<String, dynamic> j) => Quiz(
+        id: j['id'],
+        title: j['title'],
+        description: j['description'] ?? '',
+        durationMinutes: j['durationMinutes'],
+        dueAt: j['dueAt'] == null ? null : DateTime.parse(j['dueAt']).toLocal(),
+        published: j['published'] == true,
+        showAnswers: j['showAnswers'] != false,
+        questionCount: j['questionCount'] ?? (j['questions'] as List?)?.length ?? 0,
+        maxScore: (j['maxScore'] as num?)?.toDouble() ?? 0,
+        submittedCount: j['submittedCount'],
+        totalStudents: j['totalStudents'],
+        averageScore: (j['averageScore'] as num?)?.toDouble(),
+        attempt: j['attempt'] == null ? null : QuizAttempt.fromJson(j['attempt']),
+        attempts: [for (final a in (j['attempts'] as List? ?? [])) QuizAttempt.fromJson(a)],
+        questions: [for (final q in (j['questions'] as List? ?? [])) QuizQuestion.fromJson(q)],
+        serverTime: j['serverTime'] == null ? null : DateTime.parse(j['serverTime']).toLocal(),
+      );
+}

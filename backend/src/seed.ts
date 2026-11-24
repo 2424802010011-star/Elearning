@@ -5,16 +5,29 @@ import { EnrollmentStatus } from './classes/enrollment.entity';
 import { AuthUser } from './common/decorators';
 import { Role } from './common/role.enum';
 import { MeetingsService } from './meetings/meetings.service';
+import { QuizzesService } from './quizzes/quizzes.service';
 import { TimetableService } from './timetable/timetable.service';
 import { UsersService } from './users/users.service';
 
 export const DEMO_PASSWORD = 'demo1234';
 
 /** Tạo dữ liệu mẫu để xem thử: 1 giáo viên, 3 học sinh, 1 phụ huynh, 1 lớp, thời khóa biểu, 1 cuộc họp. */
-export async function seedDemo(users: UsersService, classes: ClassesService, timetable: TimetableService, meetings: MeetingsService, assignments: AssignmentsService) {
-  if ((await users.list(Role.Teacher)).length > 0) return;
+const as = (u: { id: string; email: string; role: Role }): AuthUser => ({ id: u.id, email: u.email, role: u.role });
+
+export async function seedDemo(
+  users: UsersService,
+  classes: ClassesService,
+  timetable: TimetableService,
+  meetings: MeetingsService,
+  assignments: AssignmentsService,
+  quizzes: QuizzesService,
+) {
+  if ((await users.list(Role.Teacher)).length > 0) {
+    // Dữ liệu mẫu đã có từ bản trước: chỉ bổ sung phần mới.
+    await seedQuizzes(users, classes, quizzes);
+    return;
+  }
   const log = new Logger('Demo');
-  const as = (u: { id: string; email: string; role: Role }): AuthUser => ({ id: u.id, email: u.email, role: u.role });
 
   const gv = await users.create('giaovien@demo.vn', DEMO_PASSWORD, 'Cô Lan (Giáo viên Toán)', Role.Teacher);
   const hs1 = await users.create('hocsinh1@demo.vn', DEMO_PASSWORD, 'Nguyễn Minh An', Role.Student);
@@ -51,5 +64,44 @@ export async function seedDemo(users: UsersService, classes: ClassesService, tim
   await assignments.grade(as(gv), bt1.id, nop.id, { score: 9, feedback: 'Đúng. Nên ghi thêm khi nào đạt giá trị lớn nhất.' });
   await assignments.submit(as(hs2), bt1.id, { content: 'Chu kỳ là π.' });
 
+  await seedQuizzes(users, classes, quizzes);
+
   log.log(`Đã tạo dữ liệu mẫu. Mật khẩu mọi tài khoản demo: ${DEMO_PASSWORD}. Mã mời lớp Toán 10A1: ${lop.inviteCode}`);
+}
+
+/** Bài kiểm tra trắc nghiệm mẫu cho lớp Toán 10A1 (chỉ tạo khi lớp chưa có bài nào). */
+async function seedQuizzes(users: UsersService, classes: ClassesService, quizzes: QuizzesService) {
+  const all = await users.list();
+  const gv = all.find((u) => u.email === 'giaovien@demo.vn');
+  const hs1 = all.find((u) => u.email === 'hocsinh1@demo.vn');
+  if (!gv) return;
+  const lop = (await classes.listFor(as(gv))).find((c) => c.name === 'Toán 10A1');
+  if (!lop || (await quizzes.listForClass(as(gv), lop.id)).length) return;
+
+  const kt = await quizzes.create(as(gv), lop.id, {
+    title: 'Kiểm tra 15 phút: hàm số lượng giác',
+    description: 'Mỗi câu 2,5 điểm. Câu có nhiều đáp án đúng phải chọn đủ mới được điểm.',
+    durationMinutes: 15,
+    published: true,
+    questions: [
+      { text: 'Chu kỳ của hàm số y = sin(2x) là:', options: ['π', '2π', 'π/2', '4π'], correct: [0], points: 2.5 },
+      { text: 'Giá trị lớn nhất của y = 3cos(x) + 1 là:', options: ['3', '4', '1', '2'], correct: [1], points: 2.5 },
+      { text: 'Những hàm số nào là hàm số chẵn?', options: ['y = cos(x)', 'y = sin(x)', 'y = x²', 'y = tan(x)'], correct: [0, 2], points: 2.5 },
+      { text: 'sin²(x) + cos²(x) bằng:', options: ['0', '1', '2', 'sin(2x)'], correct: [1], points: 2.5 },
+    ],
+  });
+  await quizzes.create(as(gv), lop.id, {
+    title: 'Kiểm tra 45 phút: hình học (bản nháp)',
+    durationMinutes: 45,
+    published: false,
+    questions: [
+      { text: 'Tam giác vuông có hai cạnh góc vuông 3 và 4 thì cạnh huyền bằng:', options: ['5', '6', '7', '√7'], correct: [0] },
+      { text: 'Tổng ba góc trong một tam giác bằng:', options: ['90°', '180°', '270°', '360°'], correct: [1] },
+    ],
+  });
+  if (hs1) {
+    await quizzes.start(as(hs1), kt.id);
+    const ids = kt.questions.map((q) => q.id);
+    await quizzes.submit(as(hs1), kt.id, { answers: { [ids[0]]: [0], [ids[1]]: [1], [ids[2]]: [0], [ids[3]]: [1] } });
+  }
 }

@@ -7,10 +7,10 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 
 | Phần | Công nghệ | Trạng thái |
 |---|---|---|
-| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài tập và chấm điểm |
+| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài tập và chấm điểm, kiểm tra trắc nghiệm tự chấm |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Đã có: camera, micro, chia sẻ màn hình, khung hình người tham gia |
-| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập (thư mục `app`) |
+| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập, kiểm tra trắc nghiệm (thư mục `app`) |
 | Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học và bộ nhận diện ký hiệu $P chạy ngay trên máy (không cần mạng) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đọc chữ số, chữ và ký hiệu toán (phân số, căn, số mũ, ∫, π, Σ, ∞…) rồi viết lại cho gọn, đồng bộ thời gian thực |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
@@ -40,6 +40,7 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
    Chọn "AI chữ & toán", viết ví dụ `y = x² + 1`, một phân số hay căn bậc hai rồi dừng tay khoảng 1 giây: app đọc biểu thức (hiện ở dưới màn hình) và viết lại ngay ngắn, thẳng hàng. Bấm "Giữ nét gốc" nếu muốn giữ chữ viết tay.
 3. Bấm biểu tượng quyền viết (góc trên) để cho học sinh viết lên bảng.
 4. Mở thêm một cửa sổ ẩn danh (Ctrl+Shift+N), đăng nhập Học sinh, vào cùng cuộc họp: giáo viên vẽ đến đâu học sinh thấy ngay đến đó; khi được cấp quyền, học sinh vẽ thì giáo viên cũng thấy.
+5. Tab **Kiểm tra**: giáo viên bấm "Soạn đề", đánh dấu đáp án đúng (một hoặc nhiều), đặt thời gian làm bài rồi "Phát hành". Học sinh (thử hocsinh2@demo.vn, vì hocsinh1 đã làm sẵn) bấm "Bắt đầu làm bài": có đồng hồ đếm ngược, hết giờ tự nộp, nộp xong thấy điểm và đáp án ngay. Giáo viên xem điểm từng em và tỉ lệ làm đúng từng câu.
 
 ### Thử trên trang /docs
 
@@ -83,6 +84,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Thời khóa biểu | Tiết lặp hằng tuần, chặn giáo viên trùng giờ, xem lịch theo tuần cho mọi vai trò |
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
 | Bài tập | Giáo viên giao bài (hạn nộp, điểm tối đa), học sinh nộp/nộp lại khi chưa chấm, tự đánh dấu nộp muộn, giáo viên chấm điểm + nhận xét, phụ huynh xem điểm của con |
+| Kiểm tra trắc nghiệm | Soạn đề (câu một hoặc nhiều đáp án, điểm từng câu), bản nháp/phát hành, giới hạn thời gian và hạn chót, đề gửi học sinh không kèm đáp án, tự chấm khi nộp, thống kê điểm và tỉ lệ đúng từng câu, phụ huynh xem điểm của con |
 | Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 
 Quy tắc phân quyền chính:
