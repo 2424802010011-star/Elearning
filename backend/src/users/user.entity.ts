@@ -15,7 +15,7 @@ export class User {
   @Column()
   fullName: string;
 
-  @Column({ type: 'enum', enum: Role })
+  @Column({ type: 'simple-enum', enum: Role })
   role: Role;
 
   @CreateDateColumn()

@@ -128,4 +128,12 @@ export class ClassesService {
     c.inviteCode = await this.newInviteCode();
     return this.classes.save(c);
   }
+
+  /** Id các học sinh đã được duyệt vào lớp. */
+  async approvedStudentIds(classId: string): Promise<string[]> {
+    const rows = await this.enrollments.find({
+      where: { classroom: { id: classId }, status: EnrollmentStatus.Approved },
+    });
+    return rows.map((r) => r.student.id);
+  }
 }

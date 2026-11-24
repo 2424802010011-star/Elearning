@@ -4,9 +4,10 @@
   "private": true,
   "description": "EduBoard API: auth, roles, classes, timetable",
   "scripts": {
+    "dev": "ts-node src/main.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
-    "start:dev": "ts-node src/main.ts",
+    "demo": "npm run build && node dist/main.js",
     "test": "jest --runInBand"
   },
   "jest": {
@@ -15,7 +16,8 @@
     "rootDir": ".",
     "testMatch": [
       "<rootDir>/test/**/*.spec.ts"
-    ]
+    ],
+    "testTimeout": 30000
   },
   "dependencies": {
     "@nestjs/common": "^11.2.11",
@@ -23,13 +25,16 @@
     "@nestjs/core": "^11.2.11",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.2.11",
+    "@nestjs/swagger": "^11.4.8",
     "@nestjs/typeorm": "^11.0.3",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.4",
+    "livekit-server-sdk": "^2.20.1",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "sql.js": "^1.17.0",
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
@@ -43,5 +48,8 @@
     "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "typescript": "~5.6"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

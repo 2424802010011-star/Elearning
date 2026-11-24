@@ -20,7 +20,7 @@ export class Enrollment {
   @ManyToOne(() => User, { onDelete: 'CASCADE', eager: true })
   student: User;
 
-  @Column({ type: 'enum', enum: EnrollmentStatus, default: EnrollmentStatus.Pending })
+  @Column({ type: 'simple-enum', enum: EnrollmentStatus, default: EnrollmentStatus.Pending })
   status: EnrollmentStatus;
 
   @CreateDateColumn()

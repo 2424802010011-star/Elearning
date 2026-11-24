@@ -1,3 +1,4 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { CurrentUser, Roles } from '../common/decorators';
 import type { AuthUser } from '../common/decorators';
@@ -5,6 +6,8 @@ import { Role } from '../common/role.enum';
 import { CreateEntryDto } from './dto';
 import { TimetableService } from './timetable.service';
 
+@ApiTags('Thời khóa biểu')
+@ApiBearerAuth()
 @Controller()
 export class TimetableController {
   constructor(private readonly timetable: TimetableService) {}

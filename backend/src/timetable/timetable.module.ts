@@ -9,5 +9,6 @@ import { TimetableService } from './timetable.service';
   imports: [TypeOrmModule.forFeature([TimetableEntry]), ClassesModule],
   controllers: [TimetableController],
   providers: [TimetableService],
+  exports: [TimetableService],
 })
 export class TimetableModule {}

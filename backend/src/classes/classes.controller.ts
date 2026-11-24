@@ -1,3 +1,4 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { CurrentUser, Roles } from '../common/decorators';
 import type { AuthUser } from '../common/decorators';
@@ -6,6 +7,8 @@ import { ClassesService } from './classes.service';
 import { CreateClassDto, JoinClassDto, ReviewEnrollmentDto } from './dto';
 import { EnrollmentStatus } from './enrollment.entity';
 
+@ApiTags('Lớp học')
+@ApiBearerAuth()
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classes: ClassesService) {}

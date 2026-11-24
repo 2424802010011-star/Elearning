@@ -1,3 +1,4 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { CurrentUser, Roles } from '../common/decorators';
 import type { AuthUser } from '../common/decorators';
@@ -5,6 +6,8 @@ import { Role } from '../common/role.enum';
 import { CreateParentLinkDto, CreateUserDto, UpdateRoleDto } from './dto';
 import { UsersService } from './users.service';
 
+@ApiTags('Người dùng & phụ huynh')
+@ApiBearerAuth()
 @Controller()
 export class UsersController {
   constructor(private readonly users: UsersService) {}

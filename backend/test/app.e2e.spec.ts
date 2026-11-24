@@ -1,4 +1,11 @@
-process.env.DATABASE_URL ??= 'postgres://eduboard:eduboard@localhost:5432/eduboard_test';
+// TEST_DB=sqlite: chạy trên SQLite trong bộ nhớ. Mặc định: PostgreSQL (database test riêng, bị xóa mỗi lần chạy).
+if (process.env.TEST_DB === 'sqlite') {
+  delete process.env.DATABASE_URL;
+  process.env.SQLITE_FILE = ':memory:';
+} else {
+  process.env.DATABASE_URL ??= 'postgres://eduboard:eduboard@localhost:5432/eduboard_test';
+}
+process.env.SEED_DEMO = 'false';
 process.env.JWT_SECRET = 'test-secret';
 process.env.DB_SYNC = 'true';
 process.env.DB_DROP_SCHEMA = 'true';
@@ -8,6 +15,7 @@ process.env.ADMIN_PASSWORD = 'admin12345';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { TokenVerifier } from 'livekit-server-sdk';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/setup';
 
@@ -220,6 +228,86 @@ describe('EduBoard API', () => {
       await http().delete(`/api/classes/${ids.class1}/timetable/${list.body[0].id}`).set(auth('gv1')).expect(204);
       const after = await http().get(`/api/classes/${ids.class1}/timetable`).set(auth('gv1')).expect(200);
       expect(after.body).toHaveLength(1);
+    });
+  });
+
+  describe('Họp trực tuyến và quyền viết bảng', () => {
+    let meetingId: string;
+
+    it('chỉ giáo viên chủ lớp tạo được cuộc họp', async () => {
+      await http().post(`/api/classes/${ids.class1}/meetings`).set(auth('hs1')).send({ title: 'x' }).expect(403);
+      await http().post(`/api/classes/${ids.class1}/meetings`).set(auth('gv2')).send({ title: 'x' }).expect(403);
+      const res = await http()
+        .post(`/api/classes/${ids.class1}/meetings`)
+        .set(auth('gv1'))
+        .send({ title: 'Ôn tập lượng giác', scheduledAt: '2026-12-08T07:30:00+07:00' })
+        .expect(201);
+      expect(res.body.status).toBe('scheduled');
+      meetingId = res.body.id;
+      const list = await http().get(`/api/classes/${ids.class1}/meetings`).set(auth('hs1')).expect(200);
+      expect(list.body).toHaveLength(1);
+    });
+
+    it('học sinh chưa vào được khi giáo viên chưa mở phòng; người ngoài lớp và phụ huynh bị chặn', async () => {
+      await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs1')).expect(400);
+      await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs3')).expect(403);
+      await http().post(`/api/meetings/${meetingId}/join`).set(auth('ph1')).expect(403);
+    });
+
+    it('giáo viên vào thì phòng mở, nhận token LiveKit có quyền quản trị phòng', async () => {
+      const res = await http().post(`/api/meetings/${meetingId}/join`).set(auth('gv1')).expect(200);
+      expect(res.body.isHost).toBe(true);
+      expect(res.body.canWriteBoard).toBe(true);
+      const grants = await new TokenVerifier('devkey', 'secret').verify(res.body.token);
+      expect(grants.video?.room).toBe(res.body.roomName);
+      expect(grants.video?.roomAdmin).toBe(true);
+      expect(grants.sub).toBe(ids.gv1);
+    });
+
+    it('học sinh vào được, token không có quyền quản trị, mặc định không được viết bảng', async () => {
+      const res = await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs1')).expect(200);
+      expect(res.body.isHost).toBe(false);
+      expect(res.body.canWriteBoard).toBe(false);
+      const grants = await new TokenVerifier('devkey', 'secret').verify(res.body.token);
+      expect(grants.video?.roomAdmin).toBeFalsy();
+    });
+
+    it('giáo viên cấp quyền viết cho từng học sinh, rồi cho cả lớp, rồi thu lại', async () => {
+      await http()
+        .put(`/api/meetings/${meetingId}/whiteboard/permissions`)
+        .set(auth('hs1'))
+        .send({ studentIds: [ids.hs1] })
+        .expect(403);
+      // hs3 không thuộc lớp
+      await http()
+        .put(`/api/meetings/${meetingId}/whiteboard/permissions`)
+        .set(auth('gv1'))
+        .send({ studentIds: [ids.hs3] })
+        .expect(400);
+      await http()
+        .put(`/api/meetings/${meetingId}/whiteboard/permissions`)
+        .set(auth('gv1'))
+        .send({ studentIds: [ids.hs1] })
+        .expect(200);
+      let p = await http().get(`/api/meetings/${meetingId}/whiteboard/permissions`).set(auth('hs1')).expect(200);
+      expect(p.body.canWrite).toBe(true);
+
+      await http().put(`/api/meetings/${meetingId}/whiteboard/permissions`).set(auth('gv1')).send({ studentIds: [] }).expect(200);
+      p = await http().get(`/api/meetings/${meetingId}/whiteboard/permissions`).set(auth('hs1')).expect(200);
+      expect(p.body.canWrite).toBe(false);
+
+      await http().put(`/api/meetings/${meetingId}/whiteboard/permissions`).set(auth('gv1')).send({ allowAll: true }).expect(200);
+      const j = await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs1')).expect(200);
+      expect(j.body.canWriteBoard).toBe(true);
+    });
+
+    it('kết thúc họp: thu hết quyền viết, không ai vào lại được trừ khi tạo phòng mới', async () => {
+      await http().post(`/api/meetings/${meetingId}/end`).set(auth('hs1')).expect(403);
+      const res = await http().post(`/api/meetings/${meetingId}/end`).set(auth('gv1')).expect(200);
+      expect(res.body.status).toBe('ended');
+      expect(res.body.boardAllowAll).toBe(false);
+      await http().post(`/api/meetings/${meetingId}/join`).set(auth('hs1')).expect(400);
+      await http().post(`/api/meetings/${meetingId}/join`).set(auth('gv1')).expect(400);
     });
   });
 });
