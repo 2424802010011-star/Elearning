@@ -8,10 +8,9 @@ if errorlevel 1 goto nonode
 echo Da tim thay Node.js phien ban:
 node -v
 
-if exist node_modules\ goto run
 echo.
-echo Dang cai thu vien lan dau, mat khoang 2-5 phut. Vui long cho...
-call npm install
+echo Dang kiem tra thu vien. Lan dau mat khoang 2-5 phut, cac lan sau chi vai giay...
+call npm install --no-audit --no-fund
 if errorlevel 1 goto fail
 
 :run
