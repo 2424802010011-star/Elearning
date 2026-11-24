@@ -15,6 +15,11 @@ if errorlevel 1 goto fail
 
 :run
 echo.
+if exist "%~dp0tools\livekit-server.exe" goto havelk
+if not exist "%~dp0tools\livekit-server.part1" goto havelk
+echo Dang ghep file may chu video (chi lam 1 lan)...
+copy /b "%~dp0tools\livekit-server.part1"+"%~dp0tools\livekit-server.part2" "%~dp0tools\livekit-server.exe" >nul
+:havelk
 if not exist "%~dp0tools\livekit-server.exe" goto novideo
 tasklist /FI "IMAGENAME eq livekit-server.exe" | find /I "livekit-server.exe" >nul
 if not errorlevel 1 goto videook
