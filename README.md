@@ -11,7 +11,7 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Đã có: camera, micro, chia sẻ màn hình, khung hình người tham gia |
 | App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài tập (thư mục `app`) |
-| Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học (chữ viết tay: ML Kit ở giai đoạn sau) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đồng bộ thời gian thực giữa giáo viên và học sinh |
+| Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học và bộ nhận diện ký hiệu $P chạy ngay trên máy (không cần mạng) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đọc chữ số, chữ và ký hiệu toán (phân số, căn, số mũ, ∫, π, Σ, ∞…) rồi viết lại cho gọn, đồng bộ thời gian thực |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
 
@@ -36,7 +36,8 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 ### Thử trong app
 
 1. Đăng nhập Giáo viên → Toán 10A1 → tab Cuộc họp → Mở phòng.
-2. Bật "AI làm đẹp nét", vẽ tay một vòng tròn, tam giác, đường lượn sóng: app tự nắn lại cho gọn.
+2. Chọn "AI hình", vẽ tay một vòng tròn, tam giác, đường lượn sóng: app tự nắn lại cho gọn.
+   Chọn "AI chữ & toán", viết ví dụ `y = x² + 1`, một phân số hay căn bậc hai rồi dừng tay khoảng 1 giây: app đọc biểu thức (hiện ở dưới màn hình) và viết lại ngay ngắn, thẳng hàng. Bấm "Giữ nét gốc" nếu muốn giữ chữ viết tay.
 3. Bấm biểu tượng quyền viết (góc trên) để cho học sinh viết lên bảng.
 4. Mở thêm một cửa sổ ẩn danh (Ctrl+Shift+N), đăng nhập Học sinh, vào cùng cuộc họp: giáo viên vẽ đến đâu học sinh thấy ngay đến đó; khi được cấp quyền, học sinh vẽ thì giáo viên cũng thấy.
 

@@ -33,6 +33,7 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
     super.didChangeDependencies();
     if (_sync != null) return;
     final api = AppScope.of(context).api;
+    board.onMathRecognized = _onMath;
     call.connect(widget.joinInfo['livekitUrl'], widget.joinInfo['token']);
     _sync = BoardSync(
       apiBaseUrl: api.baseUrl,
@@ -80,6 +81,16 @@ class _MeetingRoomScreenState extends State<MeetingRoomScreen> {
       duration: const Duration(seconds: 3),
       content: Text('AI đã nắn thành: ${shapeLabel(s.kind)}'),
       action: SnackBarAction(label: 'Giữ nét gốc', onPressed: () => board.revertToOriginal(s)),
+    ));
+  }
+
+  void _onMath(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 4),
+      content: Text(text.contains('?') ? 'AI đọc được: $text  (dấu ? là nét chưa nhận ra)' : 'AI đọc được: $text'),
+      action: SnackBarAction(label: 'Giữ nét gốc', onPressed: board.revertLastMath),
     ));
   }
 
@@ -218,11 +229,26 @@ class _Toolbar extends StatelessWidget {
               onPressed: () => board.setWidth(w),
             ),
           const SizedBox(width: 8),
-          FilterChip(
-            avatar: const Icon(Icons.auto_awesome, size: 18),
-            label: const Text('AI làm đẹp nét'),
-            selected: board.aiEnabled,
-            onSelected: board.setAi,
+          SegmentedButton<AiMode>(
+            showSelectedIcon: false,
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
+            segments: const [
+              ButtonSegment(value: AiMode.off, label: Text('Viết tự do'), tooltip: 'Giữ nguyên nét viết tay'),
+              ButtonSegment(
+                value: AiMode.shapes,
+                icon: Icon(Icons.auto_awesome, size: 18),
+                label: Text('AI hình'),
+                tooltip: 'Nắn đường thẳng, hình học, đồ thị sin',
+              ),
+              ButtonSegment(
+                value: AiMode.math,
+                icon: Icon(Icons.functions, size: 18),
+                label: Text('AI chữ & toán'),
+                tooltip: 'Đọc chữ số, chữ, ký hiệu toán, phân số, căn và viết lại cho gọn',
+              ),
+            ],
+            selected: {board.aiMode},
+            onSelectionChanged: (v) => board.setAiMode(v.first),
           ),
           IconButton(tooltip: 'Hoàn tác', icon: const Icon(Icons.undo), onPressed: board.canUndo ? board.undo : null),
           if (isHost) IconButton(tooltip: 'Xóa bảng', icon: const Icon(Icons.delete_sweep_outlined), onPressed: board.clear),

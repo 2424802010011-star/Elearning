@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
 import 'beautify.dart';
+import 'math_ink.dart';
 
 /// Chiều ngang bảng tính theo "đơn vị bảng". Mọi thiết bị dùng chung hệ toạ độ này
 /// nên nét vẽ hiện đúng vị trí dù màn hình to nhỏ khác nhau.
@@ -40,6 +42,9 @@ class Stroke {
 
 enum BoardTool { pen, eraser }
 
+/// Chế độ AI của bút: tắt, nắn hình (đường, hình học, đồ thị sin) hoặc đọc chữ và ký hiệu toán.
+enum AiMode { off, shapes, math }
+
 /// Thao tác của chính mình, dùng cho hoàn tác (không đụng nét của người khác).
 sealed class _Action {}
 
@@ -53,6 +58,13 @@ class _Removed extends _Action {
   _Removed(this.strokes);
 }
 
+/// AI đọc chữ: thay các nét viết tay bằng nét viết lại.
+class _Replaced extends _Action {
+  final List<Stroke> before;
+  final List<Stroke> after;
+  _Replaced(this.before, this.after);
+}
+
 typedef PatchSender = void Function(List<Stroke> upserts, List<String> removed);
 
 class WhiteboardController extends ChangeNotifier {
@@ -63,7 +75,15 @@ class WhiteboardController extends ChangeNotifier {
   Color color = Colors.black;
   double width = 3;
   BoardTool tool = BoardTool.pen;
-  bool aiEnabled = true;
+  AiMode aiMode = AiMode.shapes;
+
+  /// Chờ bấy lâu sau nét cuối mới đọc chữ, để kịp viết hết các nét của một ký hiệu.
+  Duration mathDelay = const Duration(milliseconds: 900);
+  final List<Stroke> _pending = [];
+  Timer? _mathTimer;
+
+  /// Báo cho giao diện khi AI vừa đọc xong một cụm chữ (ví dụ "x² + 1 = 0").
+  void Function(String text)? onMathRecognized;
 
   /// Gửi thay đổi của mình cho người khác (gắn bởi lớp đồng bộ).
   PatchSender? onPatch;
@@ -74,6 +94,7 @@ class WhiteboardController extends ChangeNotifier {
   String _newId() => '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${_rnd.nextInt(1 << 30).toRadixString(36)}';
 
   void setTool(BoardTool t) {
+    flushMath();
     tool = t;
     notifyListeners();
   }
@@ -89,14 +110,16 @@ class WhiteboardController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setAi(bool v) {
-    aiEnabled = v;
+  void setAiMode(AiMode m) {
+    flushMath();
+    aiMode = m;
     notifyListeners();
   }
 
   // ---------- thao tác của mình ----------
   void start(Offset p) {
     if (tool == BoardTool.eraser) return eraseAt(p);
+    _mathTimer?.cancel();
     _current = Stroke(id: _newId(), points: [p], color: color, width: width);
     strokes.add(_current!);
     notifyListeners();
@@ -123,7 +146,11 @@ class WhiteboardController extends ChangeNotifier {
     if (s == null) return null;
     _undo.add(_Added(s));
     Stroke? beautified;
-    if (aiEnabled) {
+    if (aiMode == AiMode.math) {
+      _pending.add(s);
+      _mathTimer?.cancel();
+      _mathTimer = Timer(mathDelay, flushMath);
+    } else if (aiMode == AiMode.shapes) {
       final r = beautify(s.points);
       if (r.kind != ShapeKind.none) {
         s.original = s.points;
@@ -135,6 +162,35 @@ class WhiteboardController extends ChangeNotifier {
     onPatch?.call([s], const []);
     notifyListeners();
     return beautified;
+  }
+
+  /// Đọc ngay các nét đang chờ (khi hết thời gian chờ, đổi công cụ hoặc đổi chế độ).
+  void flushMath() {
+    _mathTimer?.cancel();
+    _mathTimer = null;
+    if (_pending.isEmpty) return;
+    final batch = [for (final s in _pending) if (strokes.contains(s)) s];
+    _pending.clear();
+    if (batch.isEmpty || _current != null) return;
+    final r = recognizeMath([for (final s in batch) s.points]);
+    if (r.recognized == 0) return;
+    final first = batch.first;
+    final after = [
+      for (final pts in r.strokes)
+        Stroke(id: _newId(), points: pts, color: first.color, width: first.width, kind: ShapeKind.none),
+    ];
+    final at = strokes.indexOf(first);
+    strokes.removeWhere(batch.contains);
+    strokes.insertAll(at.clamp(0, strokes.length), after);
+    _undo.add(_Replaced(batch, after));
+    onPatch?.call(after, [for (final s in batch) s.id]);
+    notifyListeners();
+    onMathRecognized?.call(r.text);
+  }
+
+  /// Bỏ kết quả đọc chữ gần nhất, trả lại nét viết tay.
+  void revertLastMath() {
+    if (_undo.isNotEmpty && _undo.last is _Replaced) undo();
   }
 
   void revertToOriginal(Stroke s) {
@@ -182,11 +238,17 @@ class WhiteboardController extends ChangeNotifier {
       case _Removed(strokes: final removed):
         strokes.addAll(removed);
         onPatch?.call(removed, const []);
+      case _Replaced(:final before, :final after):
+        final at = strokes.indexWhere(after.contains);
+        strokes.removeWhere(after.contains);
+        strokes.insertAll(at < 0 ? strokes.length : at, before);
+        onPatch?.call(before, [for (final s in after) s.id]);
     }
     notifyListeners();
   }
 
   void clear() {
+    _pending.clear();
     if (strokes.isEmpty) return;
     _undo.add(_Removed(List.of(strokes)));
     strokes.clear();
@@ -217,8 +279,15 @@ class WhiteboardController extends ChangeNotifier {
   }
 
   void applyClear() {
+    _pending.clear();
     strokes.clear();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _mathTimer?.cancel();
+    super.dispose();
   }
 }
 

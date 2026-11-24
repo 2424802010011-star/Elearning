@@ -287,3 +287,6 @@ List<Offset> _smooth(List<Offset> p, int w) => [
           return Offset(sx / n, sy / n);
         }(),
     ];
+
+/// Rút gọn nét về các điểm góc (dùng chung cho bộ nhận diện ký hiệu toán).
+List<Offset> simplifyPath(List<Offset> pts, double eps) => _rdp(pts, eps);
