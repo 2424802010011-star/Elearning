@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Role } from '../common/role.enum';
 import { ParentLink } from './parent-link.entity';
 import { User } from './user.entity';
@@ -58,6 +58,13 @@ export class UsersService {
     const existing = await this.links.findOne({ where: { parent: { id: parentId }, student: { id: studentId } } });
     if (existing) throw new ConflictException('Đã liên kết từ trước');
     return this.links.save(this.links.create({ parent, student }));
+  }
+
+  /** Id phụ huynh của các học sinh. */
+  async parentIdsOf(studentIds: string[]): Promise<string[]> {
+    if (!studentIds.length) return [];
+    const links = await this.links.find({ where: { student: { id: In(studentIds) } } });
+    return [...new Set(links.map((l) => l.parent.id))];
   }
 
   async childrenOf(parentId: string): Promise<User[]> {

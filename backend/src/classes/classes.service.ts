@@ -4,6 +4,7 @@ import { randomInt } from 'crypto';
 import { In, Repository } from 'typeorm';
 import { AuthUser } from '../common/decorators';
 import { Role } from '../common/role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 import { Classroom } from './classroom.entity';
 import { CreateClassDto } from './dto';
@@ -18,6 +19,7 @@ export class ClassesService {
     @InjectRepository(Classroom) private readonly classes: Repository<Classroom>,
     @InjectRepository(Enrollment) private readonly enrollments: Repository<Enrollment>,
     private readonly users: UsersService,
+    private readonly notes: NotificationsService,
   ) {}
 
   private async newInviteCode(): Promise<string> {
@@ -96,7 +98,9 @@ export class ClassesService {
     if (existing) {
       if (existing.status === EnrollmentStatus.Rejected) {
         existing.status = EnrollmentStatus.Pending;
-        return this.enrollments.save(existing);
+        const again = await this.enrollments.save(existing);
+        await this.notifyRequest(classroom, existing.student.fullName);
+        return again;
       }
       throw new ConflictException(
         existing.status === EnrollmentStatus.Approved ? 'Bạn đã ở trong lớp này' : 'Yêu cầu đang chờ giáo viên duyệt',
@@ -104,7 +108,18 @@ export class ClassesService {
     }
     const student = await this.users.findById(me.id);
     const saved = await this.enrollments.save(this.enrollments.create({ classroom, student }));
+    await this.notifyRequest(classroom, student.fullName);
     return { ...saved, classroom } as Enrollment;
+  }
+
+  private notifyRequest(c: Classroom, studentName: string) {
+    return this.notes.notify([c.teacher.id], {
+      type: 'enroll_request',
+      title: `${studentName} xin vào lớp ${c.name}`,
+      body: 'Vào tab Học sinh để duyệt.',
+      classId: c.id,
+      tab: 'students',
+    });
   }
 
   async listEnrollments(me: AuthUser, classId: string, status?: EnrollmentStatus): Promise<Enrollment[]> {
@@ -119,8 +134,19 @@ export class ClassesService {
     await this.assertCanManage(me, classId);
     const e = await this.enrollments.findOne({ where: { id: enrollmentId, classroom: { id: classId } } });
     if (!e) throw new NotFoundException('Không tìm thấy yêu cầu');
+    const changed = e.status !== status;
     e.status = status;
-    return this.enrollments.save(e);
+    const saved = await this.enrollments.save(e);
+    if (changed && status !== EnrollmentStatus.Pending) {
+      const c = await this.get(classId);
+      await this.notes.notify([e.student.id], {
+        type: status === EnrollmentStatus.Approved ? 'enroll_approved' : 'enroll_rejected',
+        title: status === EnrollmentStatus.Approved ? `Bạn đã được nhận vào lớp ${c.name}` : `Giáo viên chưa nhận bạn vào lớp ${c.name}`,
+        body: status === EnrollmentStatus.Approved ? `Giáo viên: ${c.teacher.fullName}` : 'Bạn có thể liên hệ giáo viên và gửi lại yêu cầu.',
+        classId: status === EnrollmentStatus.Approved ? c.id : undefined,
+      });
+    }
+    return saved;
   }
 
   async regenerateCode(me: AuthUser, classId: string): Promise<Classroom> {

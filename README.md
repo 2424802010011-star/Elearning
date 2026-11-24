@@ -7,10 +7,10 @@ Kế hoạch chi tiết: hai file Word/Excel `Ke_hoach_du_an_phan_mem_hoc_tap` �
 
 | Phần | Công nghệ | Trạng thái |
 |---|---|---|
-| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài giảng và file, bài tập và chấm điểm, kiểm tra trắc nghiệm tự chấm |
+| Backend (máy chủ API) | TypeScript, NestJS 11, TypeORM | Đã có: đăng nhập, phân quyền, lớp, TKB, họp, bảng trắng thời gian thực, bài giảng và file, bài tập và chấm điểm, kiểm tra trắc nghiệm tự chấm, thông báo |
 | Cơ sở dữ liệu | PostgreSQL (thật), SQLite (chạy thử, không cần cài) | Xong |
 | Họp video | LiveKit (WebRTC) | Đã có: camera, micro, chia sẻ màn hình, khung hình người tham gia |
-| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài giảng có file, bài tập (nộp kèm file), kiểm tra trắc nghiệm (thư mục `app`) |
+| App điện thoại + máy tính | Flutter (Dart), một mã nguồn cho Android, iOS, Windows, macOS, web | Đã có: đăng nhập, lớp, TKB, phòng học + bảng trắng, bài giảng có file, bài tập (nộp kèm file), kiểm tra trắc nghiệm, thông báo (thư mục `app`) |
 | Bảng trắng, AI nhận diện nét | Flutter, thuật toán hình học và bộ nhận diện ký hiệu $P chạy ngay trên máy (không cần mạng) | Đã có: vẽ tay, nắn hình học và đồ thị sin, đọc chữ số, chữ và ký hiệu toán (phân số, căn, số mũ, ∫, π, Σ, ∞…) rồi viết lại cho gọn, đồng bộ thời gian thực |
 
 ## Chạy thử trên Windows (cách nhanh nhất)
@@ -85,6 +85,7 @@ Mọi route (trừ đăng ký, đăng nhập) cần header `Authorization: Beare
 | Họp trực tuyến | Tạo/lên lịch họp, vào phòng (nhận token LiveKit), giáo viên mở và kết thúc phòng |
 | Bài tập | Giáo viên giao bài (hạn nộp, điểm tối đa), học sinh nộp/nộp lại khi chưa chấm, tự đánh dấu nộp muộn, giáo viên chấm điểm + nhận xét, phụ huynh xem điểm của con |
 | Bài giảng, file | Giáo viên đăng bài giảng kèm tài liệu, slide, video (tối đa 50 MB mỗi file); học sinh nộp bài bằng ảnh chụp hoặc file. File bài giảng: cả lớp tải được. File bài nộp: chỉ học sinh đó, giáo viên và phụ huynh. Link tải có hạn 10 phút |
+| Thông báo | Tự báo khi có bài tập, bài kiểm tra, bài giảng mới, khi có điểm, khi lớp bắt đầu học trực tuyến, khi học sinh xin vào lớp hoặc được duyệt. Phụ huynh nhận cả điểm của con. App hiện số chưa đọc trên chuông, bấm vào mở đúng lớp và đúng tab |
 | Kiểm tra trắc nghiệm | Soạn đề (câu một hoặc nhiều đáp án, điểm từng câu), bản nháp/phát hành, giới hạn thời gian và hạn chót, đề gửi học sinh không kèm đáp án, tự chấm khi nộp, thống kê điểm và tỉ lệ đúng từng câu, phụ huynh xem điểm của con |
 | Bảng trắng | Giáo viên cấp/thu quyền viết cho từng học sinh hoặc cả lớp. Đồng bộ nét vẽ qua WebSocket `ws://<máy chủ>/ws/board?meetingId=&token=` |
 

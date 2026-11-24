@@ -12,6 +12,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
 import { FilesModule } from './files/files.module';
 import { FilesService } from './files/files.service';
 import { LessonsModule } from './lessons/lessons.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { LessonsService } from './lessons/lessons.service';
 import { Role } from './common/role.enum';
 import { MeetingsModule } from './meetings/meetings.module';
@@ -74,6 +75,7 @@ function dbOptions(cfg: ConfigService): TypeOrmModuleOptions {
     QuizzesModule,
     FilesModule,
     LessonsModule,
+    NotificationsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

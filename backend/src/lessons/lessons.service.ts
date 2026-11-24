@@ -5,6 +5,7 @@ import { ClassesService } from '../classes/classes.service';
 import { AuthUser } from '../common/decorators';
 import { FilesService } from '../files/files.service';
 import { FileVisibility } from '../files/stored-file.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateLessonDto } from './dto';
 import { Lesson } from './lesson.entity';
 
@@ -14,6 +15,7 @@ export class LessonsService {
     @InjectRepository(Lesson) private readonly lessons: Repository<Lesson>,
     private readonly classes: ClassesService,
     private readonly files: FilesService,
+    private readonly notes: NotificationsService,
   ) {}
 
   private view(l: Lesson) {
@@ -27,6 +29,13 @@ export class LessonsService {
     const saved = await this.lessons.save(
       this.lessons.create({ classroom, title: dto.title.trim(), content: dto.content ?? '', attachments }),
     );
+    await this.notes.notify(await this.classes.approvedStudentIds(classroom.id), {
+      type: 'lesson_new',
+      title: `Bài giảng mới · ${classroom.name}`,
+      body: `${saved.title}${attachments.length ? ` (${attachments.length} file đính kèm)` : ''}`,
+      classId: classroom.id,
+      tab: 'lessons',
+    });
     return this.view(saved);
   }
 

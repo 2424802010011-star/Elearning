@@ -8,6 +8,7 @@ import { BoardHub } from '../board/board.hub';
 import { ClassesService } from '../classes/classes.service';
 import { AuthUser } from '../common/decorators';
 import { Role } from '../common/role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 import { BoardPermissionsDto, CreateMeetingDto } from './dto';
 import { Meeting, MeetingStatus } from './meeting.entity';
@@ -20,6 +21,7 @@ export class MeetingsService {
     private readonly users: UsersService,
     private readonly cfg: ConfigService,
     private readonly hub: BoardHub,
+    private readonly notes: NotificationsService,
   ) {
     // Chỉ người được vào phòng (đang mở) mới kết nối được bảng trắng.
     hub.setAccessChecker(async (user, meetingId) => {
@@ -76,6 +78,13 @@ export class MeetingsService {
       m.status = MeetingStatus.Live;
       m.startedAt = new Date();
       await this.meetings.save(m);
+      await this.notes.notify(await this.classes.approvedStudentIds(m.classroom.id), {
+        type: 'meeting_live',
+        title: `Lớp ${m.classroom.name} đang học trực tuyến`,
+        body: `${m.title}. Vào tab Cuộc họp để tham gia.`,
+        classId: m.classroom.id,
+        tab: 'meetings',
+      });
     }
     return m;
   }

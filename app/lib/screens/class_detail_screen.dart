@@ -11,7 +11,9 @@ import 'quizzes_tab.dart';
 
 class ClassDetailScreen extends StatefulWidget {
   final Classroom classroom;
-  const ClassDetailScreen({super.key, required this.classroom});
+  /// Tab mở sẵn: timetable, meetings, lessons, assignments, quizzes, students.
+  final String? initialTab;
+  const ClassDetailScreen({super.key, required this.classroom, this.initialTab});
   @override
   State<ClassDetailScreen> createState() => _ClassDetailScreenState();
 }
@@ -33,8 +35,11 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
     final manage = _canManage(app);
+    const order = ['timetable', 'meetings', 'lessons', 'assignments', 'quizzes', 'students'];
+    final start = order.indexOf(widget.initialTab ?? '');
     return DefaultTabController(
       length: manage ? 6 : 5,
+      initialIndex: start < 0 || (start == 5 && !manage) ? 0 : start,
       child: Scaffold(
         appBar: AppBar(
           title: Text(_c.name),

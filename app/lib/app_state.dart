@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +13,25 @@ class AppState extends ChangeNotifier {
   User? user;
   bool ready = false;
 
+  /// Số thông báo chưa đọc. Tách riêng để cập nhật số trên chuông không làm tải lại các màn hình khác.
+  final unread = ValueNotifier<int>(0);
+  Timer? _poll;
+
+  /// Hỏi máy chủ số thông báo chưa đọc (30 giây một lần khi đang đăng nhập).
+  Future<void> refreshUnread() async {
+    if (api.token == null) return;
+    try {
+      final r = await api.get('/notifications/unread-count');
+      unread.value = (r['unreadCount'] as num).toInt();
+    } catch (_) {}
+  }
+
+  void _startPolling() {
+    _poll?.cancel();
+    refreshUnread();
+    _poll = Timer.periodic(const Duration(seconds: 30), (_) => refreshUnread());
+  }
+
   AppState({ApiClient? api}) : api = api ?? ApiClient(baseUrl: ApiClient.defaultBaseUrl());
 
   Future<void> restore() async {
@@ -21,6 +42,7 @@ class AppState extends ChangeNotifier {
       api.token = prefs.getString('token');
       if (api.token != null) {
         user = User.fromJson(await api.get('/auth/me'));
+        _startPolling();
       }
     } catch (_) {
       api.token = null;
@@ -42,6 +64,7 @@ class AppState extends ChangeNotifier {
     user = User.fromJson(res['user']);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', api.token!);
+    _startPolling();
     notifyListeners();
   }
 
@@ -59,6 +82,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _poll?.cancel();
+    unread.value = 0;
     api.token = null;
     user = null;
     final prefs = await SharedPreferences.getInstance();

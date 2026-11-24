@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../app_state.dart';
 import '../models.dart';
 import 'classes_screen.dart';
+import 'notifications_screen.dart';
 import 'timetable_screen.dart';
 
 /// Khung chính: thanh điều hướng dưới (điện thoại) hoặc bên trái (máy tính).
@@ -18,8 +19,18 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _dest = [
     (Icons.class_outlined, Icons.class_, 'Lớp học'),
     (Icons.calendar_month_outlined, Icons.calendar_month, 'Thời khóa biểu'),
+    (Icons.notifications_outlined, Icons.notifications, 'Thông báo'),
     (Icons.person_outline, Icons.person, 'Tài khoản'),
   ];
+
+  /// Biểu tượng chuông có số thông báo chưa đọc.
+  Widget _icon(IconData i) {
+    if (i != Icons.notifications_outlined && i != Icons.notifications) return Icon(i);
+    return ValueListenableBuilder<int>(
+      valueListenable: AppScope.of(context).unread,
+      builder: (_, n, _) => Badge(isLabelVisible: n > 0, label: Text(n > 99 ? '99+' : '$n'), child: Icon(i)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final body = switch (_tab) {
       0 => const ClassesScreen(),
       1 => const TimetableScreen(),
+      2 => const NotificationsScreen(),
       _ => const AccountScreen(),
     };
     if (wide) {
@@ -41,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.draw_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
             ),
             destinations: [
-              for (final d in _dest) NavigationRailDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: Text(d.$3)),
+              for (final d in _dest) NavigationRailDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: Text(d.$3)),
             ],
           ),
           const VerticalDivider(width: 1),
@@ -55,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: [
-          for (final d in _dest) NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3),
+          for (final d in _dest) NavigationDestination(icon: _icon(d.$1), selectedIcon: _icon(d.$2), label: d.$3),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { ClassesService } from '../classes/classes.service';
 import { AuthUser } from '../common/decorators';
 import { Role } from '../common/role.enum';
+import { fmtVN, NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 import { CreateQuizDto, QuestionDto, SubmitQuizDto, UpdateQuizDto } from './dto';
 import { Quiz, QuizAttempt, QuizQuestion } from './entities';
@@ -50,7 +51,22 @@ export class QuizzesService {
     @InjectRepository(QuizAttempt) private readonly attempts: Repository<QuizAttempt>,
     private readonly classes: ClassesService,
     private readonly users: UsersService,
+    private readonly notes: NotificationsService,
   ) {}
+
+  private async announce(q: Quiz) {
+    await this.notes.notify(
+      await this.classes.approvedStudentIds(q.classroom.id),
+      {
+        type: 'quiz_new',
+        title: `Bài kiểm tra mới · ${q.classroom.name}`,
+        body: `${q.title}${q.durationMinutes ? ` · ${q.durationMinutes} phút` : ''}${q.dueAt ? ` · hạn ${fmtVN(q.dueAt)}` : ''}`,
+        classId: q.classroom.id,
+        tab: 'quizzes',
+      },
+      { withParents: true },
+    );
+  }
 
   private summary(q: Quiz) {
     const { questions, classroom: _c, ...rest } = q;
@@ -88,6 +104,7 @@ export class QuizzesService {
         questions: normalizeQuestions(dto.questions),
       }),
     );
+    if (saved.published) await this.announce(saved);
     return { ...this.summary(saved), questions: saved.questions };
   }
 
@@ -195,6 +212,14 @@ export class QuizzesService {
     a.score = grade(q.questions, answers);
     a.maxScore = maxScoreOf(q.questions);
     const saved = await this.attempts.save(a);
+    const kid = await this.users.findById(me.id);
+    await this.notes.notify(await this.users.parentIdsOf([me.id]), {
+      type: 'quiz_result',
+      title: `${kid.fullName} đã làm bài kiểm tra`,
+      body: `${q.title}: ${saved.score}/${saved.maxScore} điểm`,
+      classId: q.classroom.id,
+      tab: 'quizzes',
+    });
     return {
       ...this.summary(q),
       attempt: this.attemptView(q, saved),
@@ -228,9 +253,11 @@ export class QuizzesService {
     if (dto.description !== undefined) q.description = dto.description;
     if (dto.durationMinutes !== undefined) q.durationMinutes = dto.durationMinutes;
     if (dto.dueAt !== undefined) q.dueAt = dto.dueAt ? new Date(dto.dueAt) : (null as unknown as undefined);
+    const publishing = dto.published === true && !q.published;
     if (dto.published !== undefined) q.published = dto.published;
     if (dto.showAnswers !== undefined) q.showAnswers = dto.showAnswers;
     const saved = await this.quizzes.save(q);
+    if (publishing) await this.announce(saved);
     return { ...this.summary(saved), questions: saved.questions };
   }
 
