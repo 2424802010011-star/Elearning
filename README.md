@@ -44,6 +44,17 @@ Muốn làm lại từ đầu thì xóa file đó rồi chạy lại.
 
 6. Đăng nhập **Admin** → mục **Quản trị**: xem số liệu, tìm và khóa thử một học sinh (học sinh đó sẽ không đăng nhập được nữa cho tới khi mở khóa), liên kết phụ huynh với học sinh.
 
+### Dùng app trên điện thoại Android
+
+1. Cài file `EduBoard.apk` (trong `D:\Elearning`) lên điện thoại: chép file sang máy, mở ra và cho phép "Cài ứng dụng không rõ nguồn gốc".
+2. Trên máy tính, chạy `chay-thu.bat` (nếu Windows hỏi tường lửa cho Node.js thì chọn Allow cho mạng Private).
+3. Điện thoại và máy tính dùng chung một mạng Wi-Fi. Xem IP máy tính bằng lệnh `ipconfig` (dòng IPv4, ví dụ `192.168.1.10`).
+4. Mở app, bấm **Đổi địa chỉ máy chủ**, nhập `http://192.168.1.10:3000/api` rồi đăng nhập.
+
+Họp video trên điện thoại cần thêm: đặt `LIVEKIT_URL=ws://192.168.1.10:7880` trong `backend\.env`. Camera trên app cài đặt không cần HTTPS.
+
+Build lại APK: `cd app && flutter build apk --release` (cần Flutter và Android Studio), file ra ở `app\build\app\outputs\flutter-apk\app-release.apk`.
+
 ### Thử trên trang /docs
 
 1. Mở `POST /api/auth/login` → **Try it out** → nhập email, mật khẩu → **Execute**. Sao chép `accessToken`.
